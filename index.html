@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#080706" />
+
+  <title>出口易 AI 新人业务培训系统 Demo</title>
+  <meta name="description" content="出口易 AI 新人业务培训系统 WebGL demo：新人先学习知识库，再进入互动闯关。" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="出口易 AI 新人业务培训系统 Demo" />
+  <meta property="og:description" content="新人知识库学习 + 互动闯关 demo。" />
+  <meta property="og:image" content="./media/poster.jpg" />
+
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230b66ff'/><path d='M8 7h12a4 4 0 0 1 4 4v14H11a3 3 0 0 1-3-3V7Z' fill='%23ffffff'/><path d='M12 12h8M12 16h7M12 20h5' stroke='%230b66ff' stroke-width='1.7' stroke-linecap='round'/></svg>" />
+  <script type="module" crossorigin src="./assets/index-DbCv3cjM.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-lSPHMdvx.css">
+  <style>
+    .phase2-transition-video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #eef6ff;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script>
+    (() => {
+      const videoSrc = './onboarding/phase2-transition.mp4';
+      const overlayLabel = '第二阶段入口';
+
+      const attachVideo = () => {
+        const overlay = document.querySelector(`[aria-label="${overlayLabel}"]`);
+        if (!overlay || overlay.dataset.phase2VideoAttached === 'true') return;
+        const still = overlay.querySelector('img');
+        if (!still) return;
+
+        overlay.dataset.phase2VideoAttached = 'true';
+
+        const video = document.createElement('video');
+        video.className = 'phase2-transition-video';
+        video.src = videoSrc;
+        video.autoplay = true;
+        video.muted = true;
+        video.playsInline = true;
+        video.preload = 'auto';
+        video.setAttribute('aria-hidden', 'true');
+        video.addEventListener('ended', () => overlay.click(), { once: true });
+        video.addEventListener('error', () => overlay.click(), { once: true });
+
+        still.replaceWith(video);
+
+        const play = video.play();
+        if (play && typeof play.catch === 'function') {
+          play.catch(() => overlay.click());
+        }
+      };
+
+      const observer = new MutationObserver(() => attachVideo());
+      const start = () => {
+        observer.observe(document.body, { childList: true, subtree: true });
+        attachVideo();
+      };
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', start, { once: true });
+      } else {
+        start();
+      }
+    })();
+  </script>
+</body>
+</html>

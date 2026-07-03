@@ -1,0 +1,22 @@
+{
+  "id": "xiaozong-mentor",
+  "displayName": "肖总导师",
+  "description": "出口易新人培训系统中的创始人导师桌宠，引导新人先学习知识库，再完成趣味闯关。",
+  "spritesheetPath": "spritesheet.webp",
+  "cellWidth": 192,
+  "cellHeight": 208,
+  "columns": 8,
+  "rows": 9,
+  "states": [
+    "idle",
+    "running-right",
+    "running-left",
+    "waving",
+    "jumping",
+    "failed",
+    "waiting",
+    "running",
+    "review"
+  ],
+  "source": "Generated from user-provided founder reference images and a generated 8x8 action sheet."
+}

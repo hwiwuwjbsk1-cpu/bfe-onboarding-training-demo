@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>出口易业务认知指南</title>
+  <style>
+    :root {
+      --bg: #f4f8ff;
+      --paper: #ffffff;
+      --ink: #102f5e;
+      --muted: #5b6f89;
+      --blue: #1456d6;
+      --orange: #f08a18;
+      --line: rgba(60, 112, 178, 0.16);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% 0%, rgba(47, 123, 217, 0.12), transparent 34%),
+        radial-gradient(circle at 92% 12%, rgba(240, 138, 24, 0.1), transparent 32%),
+        linear-gradient(180deg, #f9fcff, var(--bg));
+      font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+      line-height: 1.7;
+    }
+
+    main {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 44px 48px 64px;
+    }
+
+    .hero {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 28px;
+      padding: 30px 34px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(234, 244, 255, 0.92));
+      box-shadow: 0 22px 58px rgba(45, 91, 150, 0.12);
+    }
+
+    .eyebrow {
+      color: var(--orange);
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 36px;
+      line-height: 1.18;
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      max-width: 760px;
+      color: var(--muted);
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      min-height: 170px;
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: 0 16px 40px rgba(45, 91, 150, 0.08);
+    }
+
+    .card h2 {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    .badge {
+      display: inline-grid;
+      min-width: 34px;
+      height: 34px;
+      place-items: center;
+      border-radius: 12px;
+      color: #fff;
+      background: linear-gradient(135deg, var(--blue), #45a5ff);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .card:nth-child(even) .badge {
+      background: linear-gradient(135deg, var(--orange), #ffba52);
+    }
+
+    ul {
+      display: grid;
+      gap: 7px;
+      margin: 0;
+      padding-left: 20px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .section {
+      margin-top: 24px;
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.86);
+    }
+
+    .section h2 {
+      margin-bottom: 14px;
+      font-size: 24px;
+      font-weight: 900;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .chip {
+      padding: 9px 13px;
+      border: 1px solid rgba(20, 86, 214, 0.18);
+      border-radius: 999px;
+      color: #174474;
+      background: #edf6ff;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .note {
+      margin-top: 24px;
+      padding: 18px 20px;
+      border: 1px dashed rgba(240, 138, 24, 0.42);
+      border-radius: 16px;
+      color: #694213;
+      background: rgba(255, 247, 235, 0.9);
+      font-size: 14px;
+      font-weight: 800;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <div class="eyebrow">PHASE 02 · BUSINESS UNDERSTANDING</div>
+      <h1>出口易业务认知指南</h1>
+      <p class="lead">这一章帮助新人从“知道公司名字”走到“能说清出口易做什么、不同业务怎么配合、客户问题该往哪里找答案”。</p>
+    </section>
+
+    <section class="grid" aria-label="业务认知核心模块">
+      <article class="card">
+        <h2><span class="badge">01</span>行业与公司</h2>
+        <ul>
+          <li>理解跨境电商物流的基本场景。</li>
+          <li>知道出口易在客户链路中的位置。</li>
+          <li>能用一句话说明公司为客户解决什么问题。</li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <h2><span class="badge">02</span>业务全景</h2>
+        <ul>
+          <li>全球仓储派送。</li>
+          <li>国际头程。</li>
+          <li>国际专线。</li>
+          <li>小包快递。</li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <h2><span class="badge">03</span>小组职责</h2>
+        <ul>
+          <li>客服组：承接客户问题与服务跟进。</li>
+          <li>销售组：理解客户需求并推进方案。</li>
+          <li>FBA 组：围绕平台仓入仓链路提供支持。</li>
+          <li>更多小组职责后续按部门材料补齐。</li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <h2><span class="badge">04</span>国内仓操作</h2>
+        <ul>
+          <li>直发、头程、拣配三类操作流程。</li>
+          <li>理解仓储节点、异常反馈和系统记录。</li>
+          <li>知道哪些问题需要找仓储运营确认。</li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="section">
+      <h2>常用系统与术语</h2>
+      <div class="chips">
+        <span class="chip">CRM</span>
+        <span class="chip">FBA</span>
+        <span class="chip">WFS</span>
+        <span class="chip">VAT</span>
+        <span class="chip">COD</span>
+        <span class="chip">体积重</span>
+        <span class="chip">国际头程</span>
+        <span class="chip">小包快递</span>
+      </div>
+      <div class="note">学完这一页后，回到游戏即可进入产品知识测试。测试会围绕业务全景、小组职责、仓储操作和常用术语随机出题。</div>
+    </section>
+  </main>
+</body>
+</html>
