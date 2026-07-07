@@ -440,7 +440,7 @@ export default function App() {
     }, [active, currentGame, markGameProgress]);
 
     return (
-        <main className="web-game-app">
+        <main className={miniLayer ? 'web-game-app is-embedded' : 'web-game-app'}>
             <section className="web-shell">
                 {stage === 'intro' && (
                     <BookIntro onOpen={openTraining} />
@@ -497,6 +497,7 @@ export default function App() {
                         coins={stats.coins}
                         game={games.find((game) => game.id === result.gameId) ?? games[0]}
                         content={lessonMap[result.gameId]}
+                        finalActionLabel={miniLayer ? '确认，进入下一阶段' : '确认，进入入职地图'}
                         onReplay={() => startGame(result.gameId)}
                         onNext={() => {
                             const idx = games.findIndex((game) => game.id === result.gameId);
@@ -504,7 +505,11 @@ export default function App() {
                             if (next) {
                                 startGame(next.id);
                             } else {
-                                backToLobby();
+                                if (miniLayer) {
+                                    completeMiniLayer();
+                                } else {
+                                    openOnboardingMap();
+                                }
                             }
                         }}
                         onBack={backToLobby}
@@ -605,7 +610,7 @@ function HomeScreen({
                     <ArrowLeft size={17} />
                     {miniLayer ? '返回培训页' : '返回培训资料'}
                 </button>
-                <span>{miniLayer ? '培训项目 / 行走问答前置小游戏' : '培训项目 / 第一层小游戏'}</span>
+                <span>培训项目 / 第一层小游戏</span>
             </div>
             <div className="home-hero">
                 <div className="hero-text">
@@ -631,7 +636,7 @@ function HomeScreen({
                     <div className="stage-progress-strip">
                         <span>第一层小游戏</span>
                         <strong>{resolvedCount}/{games.length}</strong>
-                        <small>{miniLayer ? '全部完成或跳过后进入行走问答' : '全部完成或跳过后开启入职地图'}</small>
+                        <small>{miniLayer ? '全部完成或跳过后进入下一阶段' : '全部完成或跳过后开启入职地图'}</small>
                     </div>
                 </div>
                 <div className="hero-cover">
@@ -650,7 +655,7 @@ function HomeScreen({
             {mapUnlocked && (
                 <button className="map-entry-button" onClick={onOpenMap} type="button">
                     <Map size={18} />
-                    {miniLayer ? '继续进入行走问答' : '进入第二层：入职地图'}
+                    {miniLayer ? '继续下一阶段' : '进入第二层：入职地图'}
                 </button>
             )}
 
@@ -687,11 +692,11 @@ function NextStagePrompt({ miniLayer, onStart, onLater }: { miniLayer: boolean; 
                 <button className="stage-close-button" onClick={onLater} type="button" aria-label="稍后开启">
                     <X size={18} />
                 </button>
-                <span>{miniLayer ? 'WALKING QUIZ READY' : 'STAGE 02 READY'}</span>
-                <h2>{miniLayer ? '是否进入原来的行走问答？' : '是否开启下一阶段：入职地图？'}</h2>
-                <p>{miniLayer ? '前置小游戏已完成或跳过，接下来会回到原培训 demo，并启动原本的行走问答任务线。' : '第一层小游戏已完成或跳过，可以进入任务地图继续新人入职流程。'}</p>
+                <span>{miniLayer ? 'NEXT STAGE READY' : 'STAGE 02 READY'}</span>
+                <h2>{miniLayer ? '是否进入下一阶段？' : '是否开启下一阶段：入职地图？'}</h2>
+                <p>{miniLayer ? '小游戏已完成或跳过，接下来会继续培训项目的下一段互动任务。' : '第一层小游戏已完成或跳过，可以进入任务地图继续新人入职流程。'}</p>
                 <div className="next-stage-actions">
-                    <button onClick={onStart} type="button"><Map size={18} /> {miniLayer ? '进入行走问答' : '开启入职地图'}</button>
+                    <button onClick={onStart} type="button"><Map size={18} /> {miniLayer ? '进入下一阶段' : '开启入职地图'}</button>
                     <button className="result-secondary" onClick={onLater} type="button">稍后</button>
                 </div>
             </div>
@@ -1230,6 +1235,7 @@ function ResultModal({
     coins,
     game,
     content,
+    finalActionLabel,
     onReplay,
     onNext,
     onBack
@@ -1238,6 +1244,7 @@ function ResultModal({
     coins: number;
     game: GameMeta;
     content: LessonContent;
+    finalActionLabel: string;
     onReplay: () => void;
     onNext: () => void;
     onBack: () => void;
@@ -1247,6 +1254,9 @@ function ResultModal({
     const typedTitle = typedPieces[0];
     const typedSummary = typedPieces[1];
     const typedPoints = typedPieces.slice(2);
+    const gameIndex = games.findIndex((item) => item.id === result.gameId);
+    const hasNextGame = gameIndex >= 0 && gameIndex < games.length - 1;
+    const primaryLabel = hasNextGame ? '确认，进入下一关' : finalActionLabel;
 
     return (
         <div className="result-backdrop">
@@ -1300,15 +1310,9 @@ function ResultModal({
                     <small>{content.note}</small>
 
                     <div className="result-actions">
-                        {result.skipped ? (
-                            <button onClick={onBack} type="button">返回大厅</button>
-                        ) : (
-                            <>
-                                <button onClick={onNext} type="button">继续下一关</button>
-                                <button className="result-secondary" onClick={onReplay} type="button">再玩一次</button>
-                                <button className="result-secondary" onClick={onBack} type="button">返回大厅</button>
-                            </>
-                        )}
+                        <button className="result-primary" onClick={onNext} type="button">{primaryLabel}</button>
+                        <button className="result-secondary" onClick={onReplay} type="button">再玩一次</button>
+                        <button className="result-secondary" onClick={onBack} type="button">返回大厅</button>
                     </div>
                 </article>
             </div>

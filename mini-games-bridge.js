@@ -50,15 +50,9 @@
     const layer = document.createElement('div');
     layer.id = FRAME_ID;
     layer.innerHTML = `
-      <div class="bfe-mini-games-panel" role="dialog" aria-modal="true" aria-label="行走问答前置小游戏">
-        <header class="bfe-mini-games-head">
-          <div>
-            <span>PRE-GAME</span>
-            <strong>先玩一组轻量小游戏，再进入原来的行走问答</strong>
-          </div>
-          <button type="button" class="bfe-mini-games-close" aria-label="关闭小游戏">关闭</button>
-        </header>
-        <iframe src="./mini-games.html?embed=1" title="出口易新人培训前置小游戏"></iframe>
+      <div class="bfe-mini-games-panel" role="dialog" aria-modal="true" aria-label="培训小游戏">
+        <button type="button" class="bfe-mini-games-close" aria-label="关闭小游戏" title="关闭小游戏">×</button>
+        <iframe src="./mini-games.html?embed=1" title="出口易新人培训小游戏"></iframe>
       </div>
     `;
 
