@@ -1034,7 +1034,7 @@ function RhythmGame({ onFinish }: { onFinish: (title: string, score: number, mes
 
 function PuzzleGame({ onFinish }: { onFinish: (title: string, score: number, message: string) => void }) {
     const solved = [1, 2, 3, 4, 5, 6, 7, 8, 0];
-    const [tiles, setTiles] = useState([1, 2, 3, 4, 5, 6, 0, 7, 8]);
+    const [tiles, setTiles] = useState([5, 8, 2, 7, 4, 3, 1, 6, 0]);
     const [moves, setMoves] = useState(0);
 
     const move = (idx: number) => {
@@ -1044,10 +1044,11 @@ function PuzzleGame({ onFinish }: { onFinish: (title: string, score: number, mes
         const next = [...tiles];
         next[blank] = next[idx];
         next[idx] = 0;
+        const nextMoves = moves + 1;
         setTiles(next);
-        setMoves(moves + 1);
+        setMoves(nextMoves);
         if (next.every((value, i) => value === solved[i])) {
-            window.setTimeout(() => onFinish('数字华容道', Math.max(40, 120 - moves * 4), `移动步数：${moves + 1}`), 350);
+            window.setTimeout(() => onFinish('数字华容道', Math.max(40, 120 - nextMoves * 4), `移动步数：${nextMoves}`), 350);
         }
     };
 
