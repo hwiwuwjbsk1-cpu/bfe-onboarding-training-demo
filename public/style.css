@@ -48,6 +48,271 @@ button { font: inherit; }
     backdrop-filter: blur(20px);
 }
 
+.training-intro {
+    height: 100%;
+    display: grid;
+    grid-template-columns: minmax(460px, 0.9fr) minmax(560px, 1.1fr);
+    gap: 34px;
+    align-items: center;
+    padding: 42px 54px;
+    overflow: hidden;
+    background:
+        linear-gradient(90deg, rgba(255,255,255,0.78) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(255,255,255,0.7) 1px, transparent 1px),
+        linear-gradient(135deg, rgba(236, 248, 255, 0.92), rgba(246, 251, 255, 0.72));
+    background-size: 42px 42px, 42px 42px, auto;
+}
+
+.training-intro-copy {
+    position: relative;
+    z-index: 2;
+    max-width: 560px;
+}
+
+.training-kicker {
+    display: inline-flex;
+    width: fit-content;
+    padding: 8px 13px;
+    border: 1px solid rgba(47, 128, 237, 0.18);
+    border-radius: 999px;
+    color: #246ac4;
+    background: rgba(255, 255, 255, 0.72);
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.training-intro h1 {
+    margin: 18px 0 12px;
+    color: #103a73;
+    font-size: 56px;
+    line-height: 1;
+    letter-spacing: 0;
+}
+
+.training-intro p {
+    max-width: 520px;
+    margin: 0;
+    color: #526b86;
+    font-size: 17px;
+    font-weight: 800;
+    line-height: 1.72;
+}
+
+.training-flow {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin: 24px 0;
+}
+
+.training-flow span {
+    min-height: 42px;
+    display: inline-flex;
+    align-items: center;
+    padding: 9px 12px;
+    border: 1px solid rgba(47, 128, 237, 0.14);
+    border-radius: 14px;
+    color: #244c7b;
+    background: rgba(255,255,255,0.7);
+    font-size: 13px;
+    font-weight: 900;
+}
+
+.training-primary-button,
+.training-game-button,
+.game-layer-bar button {
+    border: 0;
+    cursor: pointer;
+}
+
+.training-primary-button {
+    min-width: 190px;
+    min-height: 52px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    border-radius: 16px;
+    color: #fff;
+    background: linear-gradient(180deg, #2f80ed, #1456d6);
+    font-weight: 900;
+    box-shadow: 0 18px 38px rgba(47, 128, 237, 0.22), inset 0 -4px 0 rgba(0, 47, 128, 0.18);
+}
+
+.passport-stage {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 560px;
+    perspective: 1600px;
+}
+
+.passport-shadow {
+    position: absolute;
+    bottom: 48px;
+    width: 64%;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(35, 70, 112, 0.22);
+    filter: blur(18px);
+}
+
+.passport-book {
+    position: relative;
+    width: min(620px, 100%);
+    aspect-ratio: 1.33;
+    transform: rotate(-2deg);
+}
+
+.passport-book img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    user-select: none;
+    pointer-events: none;
+}
+
+.passport-open {
+    opacity: 0;
+    animation: passportOpenReveal 0.8s ease 0.72s forwards;
+}
+
+.passport-cover {
+    transform-origin: left center;
+    animation: passportCoverFlip 1.18s cubic-bezier(.18,.8,.2,1) 0.36s forwards;
+    filter: drop-shadow(0 28px 34px rgba(26, 56, 92, 0.22));
+}
+
+.passport-stamp {
+    width: 34% !important;
+    height: auto !important;
+    inset: auto 6% 10% auto !important;
+    opacity: 0;
+    transform: translateY(-18px) scale(1.08) rotate(-8deg);
+    animation: passportStamp 0.48s cubic-bezier(.2,.92,.26,1.22) 1.34s forwards;
+}
+
+@keyframes passportCoverFlip {
+    0% { opacity: 1; transform: rotateY(0deg) translateZ(12px); }
+    68% { opacity: 0.92; transform: rotateY(-76deg) translateZ(16px); }
+    100% { opacity: 0; transform: rotateY(-112deg) translateZ(10px); }
+}
+
+@keyframes passportOpenReveal {
+    from { opacity: 0; transform: translateY(8px) scale(0.985); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes passportStamp {
+    0% { opacity: 0; transform: translateY(-18px) scale(1.08) rotate(-8deg); }
+    68% { opacity: 1; transform: translateY(4px) scale(0.96) rotate(-8deg); }
+    100% { opacity: 1; transform: translateY(0) scale(1) rotate(-8deg); }
+}
+
+.training-reader {
+    height: 100%;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 14px;
+    padding: 18px;
+    background: rgba(248, 251, 255, 0.84);
+}
+
+.training-reader-header {
+    min-height: 76px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 14px 18px;
+    border: 1px solid rgba(255,255,255,0.76);
+    border-radius: 18px;
+    background: rgba(255,255,255,0.82);
+    box-shadow: 0 14px 34px rgba(64, 105, 155, 0.12);
+}
+
+.training-reader-header h1 {
+    margin: 8px 0 0;
+    color: #143b78;
+    font-size: 26px;
+    line-height: 1;
+}
+
+.training-reader-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    color: #60758d;
+    font-size: 13px;
+    font-weight: 900;
+}
+
+.training-game-button {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 16px;
+    border-radius: 14px;
+    color: #fff;
+    background: linear-gradient(180deg, #ffbd32, #f08a18);
+    font-weight: 900;
+    box-shadow: 0 14px 28px rgba(240, 138, 24, 0.2), inset 0 -4px 0 rgba(146, 78, 0, 0.16);
+}
+
+.training-frame-shell {
+    min-height: 0;
+    border: 1px solid rgba(255,255,255,0.76);
+    border-radius: 18px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 18px 48px rgba(64, 105, 155, 0.16);
+}
+
+.training-frame-shell iframe {
+    width: 100%;
+    height: 100%;
+    display: block;
+    border: 0;
+    background: #fff;
+}
+
+.game-layer-bar {
+    min-height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding: 8px 12px;
+    border: 1px solid rgba(255,255,255,0.76);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.76);
+    box-shadow: 0 12px 28px rgba(64, 105, 155, 0.11);
+}
+
+.game-layer-bar button {
+    min-height: 34px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 0 11px;
+    border-radius: 12px;
+    color: #244c7b;
+    background: rgba(234, 247, 255, 0.9);
+    font-size: 13px;
+    font-weight: 900;
+}
+
+.game-layer-bar span {
+    color: #60758d;
+    font-size: 13px;
+    font-weight: 900;
+}
+
 .home-web {
     height: 100%;
     overflow-y: auto;

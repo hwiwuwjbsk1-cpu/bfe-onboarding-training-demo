@@ -1,4 +1,4 @@
-import { ArrowLeft, CheckCircle, Coins, Map, SkipForward, Star, Trophy, X } from 'lucide-react';
+import { ArrowLeft, BookOpen, CheckCircle, Coins, Gamepad2, Map, SkipForward, Star, Trophy, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 
@@ -57,7 +57,7 @@ type Stats = {
 
 type GameProgressStatus = 'completed' | 'skipped';
 type GameProgress = Partial<Record<GameId, GameProgressStatus>>;
-type AppStage = 'games' | 'map';
+type AppStage = 'intro' | 'training' | 'games' | 'map';
 
 const games: GameMeta[] = [
     { id: 'rhythm', name: '节奏大师', desc: '看准轨道节拍，点中亮起音符', icon: '♪', color: '#22d3ee', image: './assets/game/rhythm-stage.png', lessonTitle: '公司简介' },
@@ -76,6 +76,8 @@ const STORAGE_KEY = 'web-mini-games-stats-v1';
 const PROGRESS_KEY = 'web-mini-games-progress-v1';
 const MAP_UNLOCK_KEY = 'web-mini-games-map-unlocked-v1';
 const defaultStats: Stats = { coins: 0, played: 0, highScore: 0, totalScore: 0, stars: 0 };
+const MINI_LAYER_COMPLETE = 'bfe-mini-games-complete';
+const MINI_LAYER_CANCEL = 'bfe-mini-games-cancel';
 
 const lessonMap: Record<GameId, LessonContent> = {
     rhythm: {
@@ -282,11 +284,18 @@ function calculateReward(score: number) {
 }
 
 export default function App() {
+    const miniLayer = useMemo(() => {
+        const params = new URLSearchParams(window.location.search);
+        return params.get('embed') === '1' || window.location.pathname.toLowerCase().endsWith('/mini-games.html');
+    }, []);
     const [stats, setStats] = useState<Stats>(() => loadStats());
     const [progress, setProgress] = useState<GameProgress>(() => loadProgress());
     const [stage, setStage] = useState<AppStage>(() => {
-        const stageParam = new URLSearchParams(window.location.search).get('stage');
-        return stageParam === 'map' ? 'map' : 'games';
+        if (miniLayer) return 'games';
+        const params = new URLSearchParams(window.location.search);
+        const stageParam = params.get('stage');
+        if (stageParam === 'training' || stageParam === 'games' || stageParam === 'map') return stageParam;
+        return 'intro';
     });
     const [mapUnlocked, setMapUnlocked] = useState(() => localStorage.getItem(MAP_UNLOCK_KEY) === '1');
     const [nextStagePrompt, setNextStagePrompt] = useState(false);
@@ -294,8 +303,9 @@ export default function App() {
     const settlementLockedRef = useRef(false);
     const [sessionKey, setSessionKey] = useState(0);
     const [active, setActive] = useState<GameId | null>(() => {
-        const game = new URLSearchParams(window.location.search).get('game');
-        return isGameId(game) ? game : null;
+        const params = new URLSearchParams(window.location.search);
+        const game = params.get('game');
+        return params.get('stage') === 'games' && isGameId(game) ? game : null;
     });
     const [result, setResult] = useState<Result | null>(null);
 
@@ -310,16 +320,34 @@ export default function App() {
     const allGamesResolved = useMemo(() => games.every((game) => progress[game.id]), [progress]);
 
     useEffect(() => {
-        if (allGamesResolved && stage === 'games' && !active && !result && !mapUnlocked && !nextStagePromptDismissed) {
+        if (allGamesResolved && stage === 'games' && !active && !result && !nextStagePromptDismissed && (miniLayer || !mapUnlocked)) {
             setNextStagePrompt(true);
         }
-    }, [active, allGamesResolved, mapUnlocked, nextStagePromptDismissed, result, stage]);
+    }, [active, allGamesResolved, mapUnlocked, miniLayer, nextStagePromptDismissed, result, stage]);
 
     const markGameProgress = useCallback((id: GameId, status: GameProgressStatus) => {
         setProgress((current) => {
             if (current[id] === 'completed') return current;
             return { ...current, [id]: status };
         });
+    }, []);
+
+    const openTraining = useCallback(() => {
+        settlementLockedRef.current = true;
+        setResult(null);
+        setActive(null);
+        setNextStagePrompt(false);
+        setStage('training');
+        window.history.replaceState(null, '', '?stage=training');
+    }, []);
+
+    const openGameLobby = useCallback(() => {
+        settlementLockedRef.current = true;
+        setResult(null);
+        setActive(null);
+        setNextStagePrompt(false);
+        setStage('games');
+        window.history.replaceState(null, '', '?stage=games');
     }, []);
 
     const startGame = useCallback((id: GameId) => {
@@ -329,7 +357,7 @@ export default function App() {
         setNextStagePrompt(false);
         setResult(null);
         setActive(id);
-        window.history.replaceState(null, '', `?game=${id}`);
+        window.history.replaceState(null, '', `?stage=games&game=${id}`);
     }, []);
 
     const backToLobby = useCallback(() => {
@@ -337,7 +365,7 @@ export default function App() {
         setResult(null);
         setActive(null);
         setStage('games');
-        window.history.replaceState(null, '', window.location.pathname);
+        window.history.replaceState(null, '', '?stage=games');
     }, []);
 
     const openOnboardingMap = useCallback(() => {
@@ -351,6 +379,31 @@ export default function App() {
         localStorage.setItem(MAP_UNLOCK_KEY, '1');
         window.history.replaceState(null, '', '?stage=map');
     }, []);
+
+    const postMiniLayerMessage = useCallback((type: string) => {
+        const targetOrigin = window.location.origin === 'null' ? '*' : window.location.origin;
+        if (window.parent && window.parent !== window) {
+            window.parent.postMessage({ type }, targetOrigin);
+            return;
+        }
+        window.location.href = './';
+    }, []);
+
+    const completeMiniLayer = useCallback(() => {
+        settlementLockedRef.current = true;
+        setNextStagePrompt(false);
+        setResult(null);
+        setActive(null);
+        postMiniLayerMessage(MINI_LAYER_COMPLETE);
+    }, [postMiniLayerMessage]);
+
+    const closeMiniLayer = useCallback(() => {
+        settlementLockedRef.current = true;
+        setNextStagePrompt(false);
+        setResult(null);
+        setActive(null);
+        postMiniLayerMessage(MINI_LAYER_CANCEL);
+    }, [postMiniLayerMessage]);
 
     const finish = useCallback((title: string, score: number, message: string) => {
         if (!active || settlementLockedRef.current) return;
@@ -373,7 +426,7 @@ export default function App() {
         if (!active || !currentGame || settlementLockedRef.current) return;
         settlementLockedRef.current = true;
         setActive(null);
-        window.history.replaceState(null, '', window.location.pathname);
+        window.history.replaceState(null, '', '?stage=games');
         setResult({
             gameId: active,
             title: currentGame.name,
@@ -389,12 +442,22 @@ export default function App() {
     return (
         <main className="web-game-app">
             <section className="web-shell">
+                {stage === 'intro' && (
+                    <BookIntro onOpen={openTraining} />
+                )}
+
+                {stage === 'training' && (
+                    <TrainingReader onStartGames={openGameLobby} />
+                )}
+
                 {stage === 'games' && !active && (
                     <HomeScreen
                         stats={stats}
                         progress={progress}
-                        mapUnlocked={mapUnlocked || allGamesResolved}
-                        onOpenMap={openOnboardingMap}
+                        mapUnlocked={miniLayer ? allGamesResolved : mapUnlocked || allGamesResolved}
+                        miniLayer={miniLayer}
+                        onOpenMap={miniLayer ? completeMiniLayer : openOnboardingMap}
+                        onBackTraining={miniLayer ? closeMiniLayer : openTraining}
                         onStart={startGame}
                     />
                 )}
@@ -450,7 +513,8 @@ export default function App() {
 
                 {nextStagePrompt && (
                     <NextStagePrompt
-                        onStart={openOnboardingMap}
+                        miniLayer={miniLayer}
+                        onStart={miniLayer ? completeMiniLayer : openOnboardingMap}
                         onLater={() => {
                             setNextStagePrompt(false);
                             setNextStagePromptDismissed(true);
@@ -462,23 +526,87 @@ export default function App() {
     );
 }
 
+function BookIntro({ onOpen }: { onOpen: () => void }) {
+    return (
+        <section className="training-intro">
+            <div className="training-intro-copy">
+                <span className="training-kicker">BFE ONBOARDING · TRAINING PROJECT</span>
+                <h1>出口易新人通关手册</h1>
+                <p>这是新人培训项目的入口。先翻开手册阅读培训资料，再从资料页进入互动环节，按顺序完成入职学习。</p>
+                <div className="training-flow">
+                    <span>01 翻开手册</span>
+                    <span>02 阅读资料</span>
+                    <span>03 趣味闯关</span>
+                    <span>04 入职地图</span>
+                </div>
+                <button className="training-primary-button" onClick={onOpen} type="button">
+                    <BookOpen size={20} />
+                    打开新人手册
+                </button>
+            </div>
+            <div className="passport-stage" aria-label="新人手册翻开动画">
+                <div className="passport-shadow" aria-hidden="true" />
+                <div className="passport-book">
+                    <img className="passport-open" src="./onboarding/passport-open.png" alt="" aria-hidden="true" />
+                    <img className="passport-cover" src="./onboarding/passport-cover.png" alt="出口易新人通关手册封面" />
+                    <img className="passport-stamp" src="./onboarding/passport-stamp.png" alt="" aria-hidden="true" />
+                </div>
+            </div>
+        </section>
+    );
+}
+
+function TrainingReader({ onStartGames }: { onStartGames: () => void }) {
+    return (
+        <section className="training-reader">
+            <header className="training-reader-header">
+                <div>
+                    <span className="training-kicker">TRAINING MATERIAL</span>
+                    <h1>新人培训资料</h1>
+                </div>
+                <div className="training-reader-actions">
+                    <span>阅读资料后进入第一层小游戏</span>
+                    <button className="training-game-button" onClick={onStartGames} type="button">
+                        <Gamepad2 size={18} />
+                        进入趣味闯关
+                    </button>
+                </div>
+            </header>
+            <div className="training-frame-shell">
+                <iframe src="./training/newcomer-training.html" title="出口易新人培训资料" />
+            </div>
+        </section>
+    );
+}
+
 function HomeScreen({
     stats,
     progress,
     mapUnlocked,
+    miniLayer,
     onOpenMap,
+    onBackTraining,
     onStart
 }: {
     stats: Stats;
     progress: GameProgress;
     mapUnlocked: boolean;
+    miniLayer: boolean;
     onOpenMap: () => void;
+    onBackTraining: () => void;
     onStart: (id: GameId) => void;
 }) {
     const resolvedCount = games.filter((game) => progress[game.id]).length;
 
     return (
         <section className="home-web">
+            <div className="game-layer-bar">
+                <button onClick={onBackTraining} type="button">
+                    <ArrowLeft size={17} />
+                    {miniLayer ? '返回培训页' : '返回培训资料'}
+                </button>
+                <span>{miniLayer ? '培训项目 / 行走问答前置小游戏' : '培训项目 / 第一层小游戏'}</span>
+            </div>
             <div className="home-hero">
                 <div className="hero-text">
                     <span className="hero-kicker">STAGE 01 · MINI GAMES</span>
@@ -503,7 +631,7 @@ function HomeScreen({
                     <div className="stage-progress-strip">
                         <span>第一层小游戏</span>
                         <strong>{resolvedCount}/{games.length}</strong>
-                        <small>全部完成或跳过后开启入职地图</small>
+                        <small>{miniLayer ? '全部完成或跳过后进入行走问答' : '全部完成或跳过后开启入职地图'}</small>
                     </div>
                 </div>
                 <div className="hero-cover">
@@ -522,7 +650,7 @@ function HomeScreen({
             {mapUnlocked && (
                 <button className="map-entry-button" onClick={onOpenMap} type="button">
                     <Map size={18} />
-                    进入第二层：入职地图
+                    {miniLayer ? '继续进入行走问答' : '进入第二层：入职地图'}
                 </button>
             )}
 
@@ -552,18 +680,18 @@ function HomeScreen({
     );
 }
 
-function NextStagePrompt({ onStart, onLater }: { onStart: () => void; onLater: () => void }) {
+function NextStagePrompt({ miniLayer, onStart, onLater }: { miniLayer: boolean; onStart: () => void; onLater: () => void }) {
     return (
         <div className="result-backdrop">
             <div className="next-stage-modal">
                 <button className="stage-close-button" onClick={onLater} type="button" aria-label="稍后开启">
                     <X size={18} />
                 </button>
-                <span>STAGE 02 READY</span>
-                <h2>是否开启下一阶段：入职地图？</h2>
-                <p>第一层小游戏已完成或跳过，可以进入任务地图继续新人入职流程。</p>
+                <span>{miniLayer ? 'WALKING QUIZ READY' : 'STAGE 02 READY'}</span>
+                <h2>{miniLayer ? '是否进入原来的行走问答？' : '是否开启下一阶段：入职地图？'}</h2>
+                <p>{miniLayer ? '前置小游戏已完成或跳过，接下来会回到原培训 demo，并启动原本的行走问答任务线。' : '第一层小游戏已完成或跳过，可以进入任务地图继续新人入职流程。'}</p>
                 <div className="next-stage-actions">
-                    <button onClick={onStart} type="button"><Map size={18} /> 开启入职地图</button>
+                    <button onClick={onStart} type="button"><Map size={18} /> {miniLayer ? '进入行走问答' : '开启入职地图'}</button>
                     <button className="result-secondary" onClick={onLater} type="button">稍后</button>
                 </div>
             </div>
