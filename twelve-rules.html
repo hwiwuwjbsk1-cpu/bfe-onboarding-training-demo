@@ -1,0 +1,702 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>十二条令训练营</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: "Microsoft YaHei", "PingFang SC", system-ui, -apple-system, sans-serif;
+    background: #f4f9ff;
+    min-height: 100vh;
+    color: #143b78;
+}
+
+/* ── Layout ── */
+.wrap { max-width: 1180px; margin: 0 auto; padding: 24px; }
+.header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; gap: 16px; }
+.header h1 { font-size: 28px; color: #143b78; }
+.header-right { display: flex; align-items: center; gap: 12px; }
+.stage-pill { padding: 6px 16px; border-radius: 999px; background: #e2f3ff; color: #2f80ed; font-size: 14px; font-weight: 900; }
+.mistake-btn { display: flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 999px; background: #fff; border: 1px solid #cde6fb; color: #2f80ed; font-size: 13px; font-weight: 900; cursor: pointer; transition: all 160ms; }
+.mistake-btn:hover { background: #f4f9ff; border-color: #2f80ed; }
+.mistake-btn .badge { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: #ef4444; color: #fff; font-size: 11px; font-weight: 900; }
+.mistake-btn .badge:empty { display: none; }
+.shell { display: grid; grid-template-columns: 300px 1fr; gap: 20px; background: #fff; border-radius: 20px; box-shadow: 0 20px 50px rgba(20,59,120,0.12); overflow: hidden; min-height: 600px; }
+
+/* ── Sidebar ── */
+.sidebar { background: linear-gradient(180deg, #143b78 0%, #1f5bb8 100%); color: #fff; padding: 28px 24px; display: flex; flex-direction: column; gap: 28px; position: relative; }
+.sidebar::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 18% 14%, rgba(75,167,255,0.28), transparent 32%), radial-gradient(circle at 88% 92%, rgba(255,189,50,0.18), transparent 30%); pointer-events: none; }
+.sidebar > * { position: relative; z-index: 1; }
+.brand-kicker { display: inline-block; padding: 5px 10px; background: rgba(255,255,255,0.12); border-radius: 999px; font-size: 11px; font-weight: 900; letter-spacing: 0.08em; width: fit-content; }
+.sidebar h2 { font-size: 26px; line-height: 1.15; }
+.sidebar p { font-size: 13px; color: rgba(255,255,255,0.7); font-weight: 700; line-height: 1.5; }
+.steps { display: grid; gap: 10px; }
+.step { display: grid; grid-template-columns: 32px 1fr; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; font-size: 14px; font-weight: 800; color: rgba(255,255,255,0.5); transition: all 200ms; }
+.step.active { background: rgba(255,255,255,0.15); color: #fff; }
+.step.done { color: #8ef0a4; }
+.step-dot { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.1); font-size: 14px; font-weight: 900; }
+.step.active .step-dot { background: linear-gradient(180deg, #ffcf4a, #ff9c22); color: #7a3500; }
+.step.done .step-dot { background: rgba(142,240,164,0.22); }
+.stage-label { padding: 14px; background: rgba(255,255,255,0.08); border-radius: 12px; }
+.stage-label span { font-size: 11px; font-weight: 900; letter-spacing: 0.1em; color: rgba(255,255,255,0.6); }
+.stage-label strong { display: block; font-size: 18px; margin-top: 4px; }
+
+/* ── Main ── */
+.main { padding: 28px 32px; display: flex; flex-direction: column; gap: 16px; }
+.stage-head { display: flex; align-items: center; justify-content: space-between; }
+.stage-head h3 { font-size: 22px; color: #143b78; }
+.task-desc { font-size: 14px; color: #526b86; font-weight: 700; margin-top: 4px; }
+
+/* ── Progress bar ── */
+.prog-bar { position: relative; height: 22px; border-radius: 999px; background: #e2f3ff; overflow: hidden; }
+.prog-fill { position: absolute; inset: 0; background: linear-gradient(90deg, #2f80ed, #36d17c); transition: width 320ms ease; }
+.prog-bar span { position: absolute; inset: 0; display: grid; place-items: center; font-size: 12px; font-weight: 900; color: #143b78; }
+
+/* ── Stage 1: 4选2 ── */
+.s1-instruction { font-size: 14px; color: #2f80ed; font-weight: 700; margin-bottom: 8px; }
+.s1-options { display: grid; gap: 10px; }
+.s1-option { display: grid; grid-template-columns: 32px 1fr auto; align-items: center; gap: 12px; padding: 14px 18px; border: 1px solid #cde6fb; border-radius: 14px; background: #fff; color: #143b78; font-size: 15px; font-weight: 800; text-align: left; cursor: pointer; transition: transform 140ms, border-color 140ms, background 140ms, box-shadow 140ms; }
+.s1-option:hover:not(.selected):not(.disabled) { transform: translateY(-1px); border-color: #2f80ed; box-shadow: 0 6px 16px rgba(47,128,237,0.14); }
+.s1-option.selected { border-color: #2f80ed; background: linear-gradient(180deg, #eef6ff, #d0e8ff); box-shadow: 0 0 0 2px rgba(47,128,237,0.18); }
+.s1-option.correct { border-color: #22b965; background: linear-gradient(180deg, #f5fff8, #d8ffe7); color: #12703b; }
+.s1-option.wrong { border-color: #ef4444; background: #fff5f5; color: #b91c1c; }
+.s1-option.disabled { cursor: default; opacity: 0.6; }
+.s1-option-dot { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: #e2f3ff; color: #2f80ed; font-size: 14px; font-weight: 900; }
+.s1-option.selected .s1-option-dot { background: #2f80ed; color: #fff; }
+.s1-option.correct .s1-option-dot { background: #22b965; color: #fff; }
+.s1-option.wrong .s1-option-dot { background: #ef4444; color: #fff; }
+.s1-check { color: #22b965; }
+.s1-shake { animation: cardShake 480ms ease; }
+@keyframes cardShake { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-5px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } }
+
+.s1-actions { display: flex; gap: 10px; margin-top: 8px; }
+.s1-hint { font-size: 13px; color: #526b86; font-weight: 700; margin-top: 8px; }
+.s1-hint.ok { color: #22b965; }
+
+/* ── Stage 2: Quiz ── */
+.quiz-scenario { display: grid; gap: 14px; flex: 1; align-content: start; }
+.fitb-input { width: 100%; padding: 12px 16px; border: 1px solid #cde6fb; border-radius: 12px; background: #fff; color: #143b78; font-size: 15px; font-weight: 700; font-family: inherit; }
+.fitb-input:focus { outline: none; border-color: #2f80ed; box-shadow: 0 0 0 3px rgba(47,128,237,0.12); }
+.fitb-input:disabled { background: #f4f9ff; color: #526b86; }
+.quiz-prompt { font-size: 14px; color: #244c7b; font-weight: 900; margin: 8px 0 4px; }
+.quiz-text { padding: 18px 20px; border-radius: 14px; background: #fff; border: 1px solid #cde6fb; color: #143b78; font-size: 16px; font-weight: 700; line-height: 1.6; }
+.quiz-kicker { width: fit-content; padding: 5px 12px; border-radius: 999px; background: #e2f3ff; color: #2f80ed; font-size: 12px; font-weight: 900; }
+.explain { padding: 10px 14px; border-radius: 12px; font-size: 13px; font-weight: 700; line-height: 1.5; }
+.explain.correct { background: #ddffe8; color: #12703b; }
+.explain.wrong { background: #ffe1e1; color: #b91c1c; }
+
+/* ── Stage 3: Meeting ── */
+.meeting-box { padding: 14px 18px; border-radius: 12px; background: #fff; border: 1px solid #cde6fb; display: grid; gap: 4px; }
+.meeting-box strong { color: #143b78; margin-bottom: 4px; }
+.meeting-box p { font-size: 13px; font-weight: 700; color: #3d5c80; }
+.form { display: grid; gap: 10px; }
+.form-row { display: grid; gap: 4px; }
+.form-row label { font-size: 12px; font-weight: 900; color: #244c7b; }
+.form-row input, .form-row textarea { width: 100%; padding: 9px 12px; border: 1px solid #cde6fb; border-radius: 10px; background: #fff; color: #143b78; font-size: 14px; font-weight: 700; font-family: inherit; resize: vertical; }
+.form-row input:focus, .form-row textarea:focus { outline: none; border-color: #2f80ed; box-shadow: 0 0 0 3px rgba(47,128,237,0.12); }
+.form-split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form-counter { font-size: 12px; color: #64758d; font-weight: 900; }
+.form-counter .ok { color: #22b965; }
+
+/* ── Buttons ── */
+.btn { justify-self: start; display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border: 0; border-radius: 999px; background: linear-gradient(180deg, #2f80ed, #1456d6); color: #fff; font-size: 14px; font-weight: 900; cursor: pointer; box-shadow: 0 10px 22px rgba(47,128,237,0.22); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn:not(:disabled):hover { transform: translateY(-1px); box-shadow: 0 12px 28px rgba(47,128,237,0.28); }
+.btn-secondary { background: #fff; color: #526b86; border: 1px solid #cde6fb; box-shadow: none; }
+.btn-secondary:hover { background: #f4f9ff; }
+.btn-danger { background: linear-gradient(180deg, #ef4444, #dc2626); }
+.btn-danger:hover { box-shadow: 0 8px 20px rgba(239,68,68,0.3); }
+
+/* ── Result / Done / Complete screens (shared) ── */
+.screen { text-align: center; padding: 60px 40px; }
+.screen .icon { color: #22b965; margin-bottom: 12px; }
+.screen h2 { font-size: 26px; color: #143b78; margin-bottom: 12px; }
+.screen h3 { font-size: 24px; color: #143b78; margin-bottom: 12px; }
+.screen p { font-size: 15px; color: #526b86; font-weight: 700; margin-bottom: 24px; }
+.next-hint { display: inline-block; margin-top: 8px; color: #2f80ed; font-size: 13px; font-weight: 900; }
+
+.reset-btn { position: fixed; top: 20px; right: 24px; padding: 8px 14px; background: #fff; border: 1px solid #cde6fb; border-radius: 999px; color: #2f80ed; font-size: 12px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.06); z-index: 10; }
+.reset-btn:hover { background: #f4f9ff; }
+body.is-embedded .reset-btn { display: none; }
+
+/* ── Mistake Book Modal ── */
+.modal-overlay { position: fixed; inset: 0; z-index: 100; display: none; align-items: center; justify-content: center; background: rgba(20,59,120,0.45); backdrop-filter: blur(6px); }
+.modal-overlay.show { display: flex; }
+.modal { background: #fff; border-radius: 20px; width: 90%; max-width: 600px; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 24px 60px rgba(20,59,120,0.25); }
+.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid #e2f3ff; }
+.modal-header h3 { font-size: 20px; color: #143b78; }
+.modal-close { width: 32px; height: 32px; border-radius: 50%; border: 1px solid #cde6fb; background: #fff; color: #526b86; font-size: 18px; cursor: pointer; display: grid; place-items: center; }
+.modal-close:hover { background: #f4f9ff; }
+.modal-body { padding: 20px 24px; overflow-y: auto; flex: 1; }
+.modal-empty { text-align: center; padding: 40px 20px; color: #64758d; font-weight: 700; }
+.modal-empty .icon { color: #22b965; margin-bottom: 12px; }
+
+.mistake-item { display: grid; gap: 8px; padding: 14px 16px; border-radius: 12px; background: #f4f9ff; border: 1px solid #e2f3ff; margin-bottom: 10px; }
+.mistake-item:last-child { margin-bottom: 0; }
+.mistake-tag { display: inline-block; padding: 3px 10px; border-radius: 999px; background: #ffe1e1; color: #b91c1c; font-size: 11px; font-weight: 900; width: fit-content; }
+.mistake-tag.s2 { background: #e2f3ff; color: #2f80ed; }
+.mistake-q { font-size: 14px; font-weight: 800; color: #143b78; line-height: 1.5; }
+.mistake-ans { font-size: 12px; font-weight: 700; color: #526b86; }
+.mistake-ans strong { color: #22b965; }
+.mistake-redo { justify-self: start; padding: 6px 14px; border-radius: 999px; border: 1px solid #cde6fb; background: #fff; color: #2f80ed; font-size: 12px; font-weight: 900; cursor: pointer; }
+.mistake-redo:hover { background: #e2f3ff; }
+
+.modal-footer { padding: 16px 24px; border-top: 1px solid #e2f3ff; display: flex; gap: 10px; justify-content: flex-end; }
+.modal-footer .btn { padding: 8px 16px; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<button class="reset-btn" onclick="resetProgress()">↺ 重置进度</button>
+
+<div class="wrap">
+    <div class="header">
+        <h1>🎯 十二条令训练营</h1>
+        <div class="header-right">
+            <button class="mistake-btn" onclick="openMistakeBook()">
+                📖 错题本
+                <span class="badge" id="mistakeBadge"></span>
+            </button>
+            <div class="stage-pill" id="stagePill">第 1 / 3 阶段</div>
+        </div>
+    </div>
+
+    <div class="shell">
+        <aside class="sidebar">
+            <div>
+                <span class="brand-kicker">BFE · TWELVE RULES</span>
+                <h2 style="margin-top:10px">十二条令训练营</h2>
+                <p style="margin-top:10px">用三次训练，把"靠谱"变成日常习惯。</p>
+            </div>
+            <div class="steps">
+                <div class="step active" id="step1"><div class="step-dot">1</div><span>识别</span></div>
+                <div class="step" id="step2"><div class="step-dot">2</div><span>判断</span></div>
+                <div class="step" id="step3"><div class="step-dot">3</div><span>记录</span></div>
+            </div>
+            <div class="stage-label">
+                <span>CURRENT STAGE</span>
+                <strong id="stageLabel">找出十二条令</strong>
+            </div>
+        </aside>
+
+        <main class="main" id="main"></main>
+    </div>
+</div>
+
+<!-- ── Mistake Book Modal ── -->
+<div class="modal-overlay" id="mistakeModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>📖 错题本</h3>
+            <button class="modal-close" onclick="closeMistakeBook()">✕</button>
+        </div>
+        <div class="modal-body" id="mistakeBody"></div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeMistakeBook()">关闭</button>
+            <button class="btn btn-danger" onclick="clearMistakes()">清空错题</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// Constants & Data
+// ═══════════════════════════════════════════
+const STORAGE_KEY = 'bfe-twelve-rules-stage-v1';
+const MISTAKES_KEY = 'bfe-twelve-rules-mistakes-v1';
+const COMPLETE_MESSAGE = 'bfe-twelve-rules-complete';
+const isEmbedded = new URLSearchParams(window.location.search).get('embed') === '1';
+document.body.classList.toggle('is-embedded', isEmbedded);
+
+const RULES = [
+    '确认指令','及时汇报','全员周报','说到做到','保持准时','解决问题',
+    '日清消息','会议记录','事事备忘','三条总结','一页报告','统计分析'
+];
+
+const DISTRACTIONS = [
+    '每天加班','所有问题自己扛','只听领导安排','会议越长越好',
+    '不用记录，靠记忆','先做再说，不用确认','多开会议讨论',
+    '有问题先扛','领导说都对','重复确认浪费时间',
+    '遇到困难不汇报','信息不用同步'
+];
+
+const QUIZ = [
+    {
+        scenario: '头程调度组收到一批紧急补货需求，调度员小张先复述了目的港、预计到仓时间和交接人，挂电话前又确认了一遍。这最能体现____的条令。',
+        options: ['确认指令','及时汇报','日清消息','事事备忘'],
+        correct: 0,
+        explain: '复述关键信息并二次确认，是"确认指令"在工作中的标准落地。'
+    },
+    {
+        scenario: '海外仓拣货组遇到系统库位与实际库存不符，拣货员小王没有自己硬扛，而是在群里说明差异数量和可能原因，并附上照片请求复核。这最能体现____的条令。',
+        options: ['及时汇报','解决问题','说到做到','三条总结'],
+        correct: 0,
+        explain: '遇到问题主动说明情况、提供证据、请求支持，是"及时汇报"的典型场景。'
+    },
+    {
+        scenario: '运营组每周五下午开周会，每位成员都要同步本周核心数据、下周重点和需要协同的事项，全程控制在30分钟内。这最能体现____的条令。',
+        options: ['全员周报','会议记录','一页报告','统计分析'],
+        correct: 0,
+        explain: '全员定期同步进展、聚焦协同项，是"全员周报"的标准落地形式。'
+    },
+    {
+        scenario: '客户经理承诺客户周三前给出物流方案，周二下班前确实把对比表、时效预估和报价明细全部发出。这最能体现____的条令。',
+        options: ['说到做到','保持准时','确认指令','一页报告'],
+        correct: 0,
+        explain: '答应客户的事按时兑现、不打折扣，体现"说到做到"的信条。'
+    },
+    {
+        scenario: '尾程配送组约定10:00开晨会，组长9:50提前到会议室，把白板、马克笔和昨日复盘数据都准备好，10:00准时开始过数据。这最能体现____的条令。',
+        options: ['保持准时','会议记录','日清消息','事事备忘'],
+        correct: 0,
+        explain: '提前准备、准时开始，是"保持准时"在团队中的具体表现。'
+    },
+    {
+        scenario: '客服组每天下班前会把当日高频问题、异常工单和未闭环事项整理成一份清单发到群里，并@相关跟进人。这最能体现____的条令。',
+        options: ['日清消息','全员周报','统计分析','三条总结'],
+        correct: 0,
+        explain: '每日梳理当日事项、不过夜、不留尾巴，属于"日清消息"的标准动作。'
+    },
+    {
+        scenario: '仓库主管每周一把上周的入库出库数据、异常分析和效率变化整理成一页A4纸的文档抄送给部门负责人。这最能体现____的条令。',
+        options: ['一页报告','三条总结','全员周报','统计分析'],
+        correct: 0,
+        explain: '把核心数据、异常和建议压缩成一页纸的汇报形式，就是"一页报告"。'
+    },
+    {
+        scenario: '盘点结束后，运营用系统导出的SKU周转率和库龄分布数据制作了图表，并标出周转低于安全值的SKU，用于调整补货策略。这最能体现____的条令。',
+        options: ['统计分析','一页报告','日清消息','三条总结'],
+        correct: 0,
+        explain: '用数据图表发现问题、辅助决策，体现了"统计分析"这一条令。'
+    }
+];
+
+const MEETING_MATERIALS = [
+    {
+        raw: `上周开了个仓库周会，主要拣货组、打包组、库存组的人都在。拣货组长先说，最近系统库位跟实际库存老是不对，上周有三次拣货走到位置发现没有货，白跑了，影响效率。打包组长说打包台上的扫码枪有两把坏了，有时候扫不上得手动输入，也拖速度。库存组长说差异主要是入库的时候没及时更新，有些货到了但系统没登记。主管听完说这样不行，让库存组当天到货当天必须更新系统，不能过夜。扫码枪这周就买新的，先用备用的顶一下。另外每周五下午搞个数据同步会，三个组长都参加，把当周差异数量、原因、处理结果过一遍。下周五开始执行。`
+    },
+    {
+        raw: `今天临时开了个客服复盘会，运营、客服组长、IT支持都在。客服组长说最近一周客户投诉涨了30%，主要是两个问题：一个是物流信息更新太慢，客户查不到货在哪；另一个是退换货流程太复杂，客户要填一堆表。运营说物流信息这块是系统接口的问题，跟物流公司对接的数据有延迟，已经催了物流公司的技术，他们说这周能修复。退换货流程IT说可以做个简化版，把三步缩成一步，但需要运营先确认新流程。主管说行，运营周三前把新流程确认给IT，IT周五前上线。客服组这周先把常见话术整理一份，安抚客户用。`
+    },
+    {
+        raw: `开了个新品推广讨论会，市场部、设计、运营、财务都在。市场部先说想推一款新的家居用品，目标客户是25-35岁的女性，预算大概50万。设计说目前有两版视觉方案，一版偏简约风，一版偏活泼风，建议先做用户测试再定。运营说推广渠道建议用小红书+抖音，但需要提前一个月准备素材，而且要找KOL合作，这部分预算要加。财务说50万有点紧，KOL报价不低，建议先找中小博主铺量，后期再加大投入。最后决定：设计这周内出两版测试素材，运营联系5个中腰部博主洽谈，财务重新核算预算，下周三再对一次。`
+    },
+    {
+        raw: `物流异常处理专题会，头程调度、客服、关务都在。头程调度说最近有批货卡在海关，清关文件缺了一份原产地证明，已经催了供应商，他们说三天内补过来。客服说客户那边催得紧，已经有三个人投诉了，需要给个明确时间。关务说文件到了之后一般两个工作日能清关，但赶上周末可能多一天。主管说客服先统一回复客户"预计本周内清关完成"，头程调度盯紧供应商，原产地证明必须周三前拿到，拿到后当天发给关务。关务收到文件后加急处理，争取周五前放行。`
+    },
+    {
+        raw: `开了个运营数据分析会，运营组全员参加。运营组长先展示了上个月的核心数据：订单量涨了15%，但客单价降了8%，整体营收基本持平。分析下来主要原因是低价促销活动拉了新客但拉低了单价。新客复购率只有12%，比老客低很多。运营A建议优化促销结构，减少纯折扣，增加满减和赠品。运营B说新客留存这块可以做个七天的自动触达序列，通过短信和推送提醒。主管说两个方向都做，运营A本周出新的促销方案，运营B搭一个七天的触达模板，下周试跑。另外每周出一份数据简报，包含订单、客单价、复购率三个核心指标。`
+    },
+    {
+        raw: `新员工培训流程优化会，人事、业务导师、仓储负责人、新员工代表都在。人事说目前新员工入职培训只有一天的集中授课，反馈是信息量大、记不住。业务导师建议改成"3天集中+1周带教"的模式，每天安排一个小任务，完成后打卡。仓储负责人说国内仓流程还没加进去，新员工去了仓库完全不懂，建议加半天的现场参观和实操。新员工代表说培训资料太文字化了，希望有视频或者小游戏。人事说这样，培训改成3天集中授课+1周岗位带教，资料做成图文+视频，仓储那边安排半天现场参观。新版材料下周五前完成初稿。`
+    },
+    {
+        raw: `618促销活动复盘会，运营、客服、仓储、财务都在。运营先说整体数据：GMV比去年涨了20%，订单量涨了35%，但退货率也涨了5个百分点。客服说退货原因主要是尺码不符和发货慢，活动期间订单暴增，仓储发货跟不上，有些客户等了五天还没收到。仓储说当时人手不够，临时工培训不足，导致发货效率和准确率都下降。财务说活动利润比预期低，因为临时工成本和退货运费都超了。主管总结：下次大促前两周必须完成临时工招聘和培训，客服提前准备发货延迟的安抚话术，运营控制预售节奏，别把订单压太集中。`
+    },
+    {
+        raw: `开了个跨部门协同会，销售、运营、产品都在。销售说客户反馈最多的问题是：后台数据报表导出太慢，有时候要等十分钟，而且格式跟财务系统对不上，每次都要手动调整。产品说导出慢是因为数据量大，没做分页和缓存，这个可以优化，但需要两周开发时间。格式问题可以让运营先出个标准模板，销售按模板填需求。运营说模板可以出，但希望产品把常用的几个报表固定下来，别每次都不一样。主管决定：产品两周内完成导出性能优化，运营本周出标准报表模板发给销售，销售后续按模板提需求。`
+    }
+];
+
+const STAGE_LABELS = ['', '找出十二条令', '判断靠谱行为', '完成会议纪要', '全部完成'];
+
+// ═══════════════════════════════════════════
+// State
+// ═══════════════════════════════════════════
+let stage = loadStage();
+let mistakes = loadMistakes();
+
+// Stage 1 state
+let s1Rounds = [];
+let s1CurrentRound = 0;
+let s1CorrectCount = 0;
+let s1Selected = [];
+let s1Locked = false;
+
+// Stage 2 state
+let s2Items = [];
+let s2Idx = 0;
+let s2Score = 0;
+let s2Locked = false;
+
+// Stage 3 state
+let currentMeeting = null;
+
+// ═══════════════════════════════════════════
+// Storage Helpers
+// ═══════════════════════════════════════════
+function loadStage() {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) { const n = parseInt(raw, 10); if (n >= 1 && n <= 4) return n; }
+    } catch(e) {}
+    return 1;
+}
+
+function saveStage(s) {
+    try { localStorage.setItem(STORAGE_KEY, String(s)); } catch(e) {}
+}
+
+function loadMistakes() {
+    try {
+        const raw = localStorage.getItem(MISTAKES_KEY);
+        if (raw) return JSON.parse(raw);
+    } catch(e) {}
+    return [];
+}
+
+function saveMistakes() {
+    try { localStorage.setItem(MISTAKES_KEY, JSON.stringify(mistakes)); } catch(e) {}
+    updateMistakeBadge();
+}
+
+function addMistake(type, question, userAnswer, correctAnswer, explain) {
+    mistakes.push({ type, question, userAnswer, correctAnswer, explain, time: Date.now() });
+    saveMistakes();
+}
+
+function clearMistakes() {
+    mistakes = [];
+    saveMistakes();
+    renderMistakeBook();
+}
+
+function resetProgress() {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(MISTAKES_KEY);
+    stage = 1;
+    mistakes = [];
+    render();
+}
+
+function continueTraining() {
+    if (window.parent && window.parent !== window) {
+        const targetOrigin = window.location.origin === 'null' ? '*' : window.location.origin;
+        window.parent.postMessage({ type: COMPLETE_MESSAGE }, targetOrigin);
+        return;
+    }
+    window.location.href = './';
+}
+
+function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
+
+// ═══════════════════════════════════════════
+// DOM Cache
+// ═══════════════════════════════════════════
+const $ = (id) => document.getElementById(id);
+const mainEl = () => $('main');
+
+// ═══════════════════════════════════════════
+// Mistake Book
+// ═══════════════════════════════════════════
+function updateMistakeBadge() {
+    const badge = $('mistakeBadge');
+    if (badge) badge.textContent = mistakes.length > 0 ? mistakes.length : '';
+}
+
+function openMistakeBook() {
+    renderMistakeBook();
+    $('mistakeModal').classList.add('show');
+}
+
+function closeMistakeBook() {
+    $('mistakeModal').classList.remove('show');
+}
+
+function renderMistakeBook() {
+    const body = $('mistakeBody');
+    if (mistakes.length === 0) {
+        body.innerHTML = `
+            <div class="modal-empty">
+                <div class="icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
+                </div>
+                <p>太棒了！你还没有错题。</p>
+            </div>
+        `;
+        return;
+    }
+    body.innerHTML = mistakes.map((m, i) => `
+        <div class="mistake-item">
+            <span class="mistake-tag ${m.type === 's2' ? 's2' : ''}">${m.type === 's2' ? '第二阶段' : '第一阶段'}</span>
+            <div class="mistake-q">${m.question}</div>
+            <div class="mistake-ans">你的答案：${m.userAnswer || '（未作答）'}</div>
+            <div class="mistake-ans">正确答案：<strong>${m.correctAnswer}</strong></div>
+            <button class="mistake-redo" onclick="redoMistake(${i})">🔄 重做</button>
+        </div>
+    `).join('');
+}
+
+function redoMistake(idx) {
+    closeMistakeBook();
+    stage = mistakes[idx].type === 's1' ? 1 : 2;
+    saveStage(stage);
+    render();
+}
+
+// ═══════════════════════════════════════════
+// Shared Screen Renderer
+// ═══════════════════════════════════════════
+function showScreen(main, { title, message, buttonText, onButton, iconSize = 56 }) {
+    main.innerHTML = `
+        <div class="screen">
+            <div class="icon"><svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg></div>
+            ${title.startsWith('<h') ? title : `<h2>${title}</h2>`}
+            <p>${message}</p>
+            <button class="btn" onclick="${onButton}">${buttonText}</button>
+        </div>
+    `;
+}
+
+function finishStage(nextStage, title, message, nextHint) {
+    saveStage(nextStage);
+    showScreen(mainEl(), {
+        title,
+        message: `${message}<br><span class="next-hint">${nextHint}</span>`,
+        buttonText: '继续培训项目',
+        onButton: 'continueTraining()'
+    });
+}
+
+// ═══════════════════════════════════════════
+// Render
+// ═══════════════════════════════════════════
+function render() {
+    $('stagePill').textContent = stage === 4 ? '✅ 全部完成' : `第 ${stage} / 3 阶段`;
+
+    ['step1', 'step2', 'step3'].forEach((id, i) => {
+        const el = $(id);
+        const n = i + 1;
+        el.className = 'step' + (stage === n ? ' active' : '') + (stage > n ? ' done' : '');
+        el.querySelector('.step-dot').innerHTML = stage > n ? '✓' : n;
+    });
+
+    $('stageLabel').textContent = STAGE_LABELS[stage];
+    updateMistakeBadge();
+
+    const main = mainEl();
+    const renderers = [null, renderStage1, renderStage2, renderStage3, renderComplete];
+    renderers[stage]?.(main);
+}
+
+// ═══════════════════════════════════════════
+// Stage 1: 4选2
+// ═══════════════════════════════════════════
+function buildStage1Rounds() {
+    const corrects = shuffle(RULES);
+    const distractions = shuffle(DISTRACTIONS);
+    return Array.from({ length: 4 }, (_, i) => {
+        const correctPair = [corrects[i * 2], corrects[i * 2 + 1]];
+        const distractorPair = [distractions[i * 2], distractions[i * 2 + 1]];
+        return { options: shuffle([...correctPair, ...distractorPair]), correct: correctPair };
+    });
+}
+
+function renderStage1(main) {
+    s1Rounds = buildStage1Rounds();
+    s1CurrentRound = 0;
+    s1CorrectCount = 0;
+    s1Selected = [];
+    s1Locked = false;
+    drawStage1Round(main);
+}
+
+function drawStage1Round(main) {
+    const round = s1Rounds[s1CurrentRound];
+    const total = s1Rounds.length;
+    main.innerHTML = `
+        <div class="stage-head"><h3>第一阶段：找出十二条令</h3></div>
+        <div class="task-desc">每次随机抽取一部分条令练习。每轮有 4 个选项，其中 2 个属于十二条令。</div>
+        <div class="prog-bar"><div class="prog-fill" id="s1fill" style="width:${(s1CurrentRound / total) * 100}%"></div><span id="s1prog">${s1CurrentRound} / ${total}</span></div>
+        <div class="s1-instruction">第 ${s1CurrentRound + 1} / ${total} 轮 · 选出 2 个正确答案</div>
+        <div class="s1-options" id="s1opts"></div>
+        <div class="s1-hint" id="s1hint"></div>
+        <div class="s1-actions" id="s1actions"></div>
+    `;
+    const opts = $('s1opts');
+    round.options.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.className = 's1-option';
+        btn.innerHTML = `<span class="s1-option-dot">${String.fromCharCode(65 + i)}</span><span>${opt}</span><span class="s1-check" id="check-${i}"></span>`;
+        btn.onclick = () => handleS1Pick(i, btn);
+        opts.appendChild(btn);
+    });
+}
+
+function handleS1Pick(idx, btn) {
+    if (s1Locked || s1Selected.includes(idx)) return;
+    const round = s1Rounds[s1CurrentRound];
+    const isCorrect = round.correct.includes(round.options[idx]);
+    s1Selected.push(idx);
+
+    if (isCorrect) {
+        btn.classList.add('correct');
+        btn.querySelector('.s1-check').innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>`;
+        s1CorrectCount++;
+    } else {
+        btn.classList.add('wrong', 's1-shake');
+        setTimeout(() => btn.classList.remove('s1-shake'), 480);
+        addMistake('s1', `找出十二条令（第${s1CurrentRound + 1}轮）`, round.options[idx], round.correct.join('、'), '十二条令包含：确认指令、及时汇报、全员周报、说到做到、保持准时、解决问题、日清消息、会议记录、事事备忘、三条总结、一页报告、统计分析');
+    }
+
+    const hint = $('s1hint');
+    if (s1Selected.length >= 2) {
+        s1Locked = true;
+        const allCorrect = s1Selected.every(i => round.correct.includes(round.options[i]));
+        hint.className = 's1-hint' + (allCorrect ? ' ok' : '');
+        hint.textContent = allCorrect ? '✅ 全部正确！' : `正确答案是：${round.correct.join('、')}`;
+        const actions = $('s1actions');
+        if (s1CurrentRound >= s1Rounds.length - 1) {
+            actions.innerHTML = `<button class="btn" onclick="finishStage(2,'第一阶段完成','你已识别十二条令的核心内容。','下次进入将开启第二阶段：判断靠谱行为。')">完成第一阶段</button>`;
+        } else {
+            actions.innerHTML = `<button class="btn" onclick="s1CurrentRound++;s1Selected=[];s1Locked=false;drawStage1Round(mainEl())">下一轮 →</button>`;
+        }
+    } else {
+        hint.className = 's1-hint';
+        hint.textContent = '已选 1 个，还需选 1 个';
+    }
+}
+
+// ═══════════════════════════════════════════
+// Stage 2: Quiz
+// ═══════════════════════════════════════════
+function renderStage2(main) {
+    s2Items = shuffle(QUIZ).slice(0, 6);
+    s2Idx = 0;
+    s2Score = 0;
+    s2Locked = false;
+    drawQuiz(main);
+}
+
+function drawQuiz(main) {
+    const q = s2Items[s2Idx];
+    const total = s2Items.length;
+    main.innerHTML = `
+        <div class="stage-head"><h3>第二阶段：判断靠谱行为</h3></div>
+        <div class="task-desc">根据场景，在横线上填入对应的条令名称。</div>
+        <div class="prog-bar"><div class="prog-fill" id="s2fill" style="width:${(s2Idx / total) * 100}%"></div><span id="s2prog">${s2Idx} / ${total}</span></div>
+        <div class="quiz-scenario">
+            <span class="quiz-kicker">场景 ${s2Idx + 1}/${total}</span>
+            <p class="quiz-text">${q.scenario}</p>
+            <p class="quiz-prompt">填入对应的条令：</p>
+            <input id="s2-input" class="fitb-input" type="text" placeholder="请输入条令名称..." />
+            <div id="exp"></div>
+        </div>
+        <div class="s1-actions"><button class="btn" id="s2submit" onclick="handleQuizSubmit()">确认</button></div>
+    `;
+    const input = $('s2-input');
+    input.focus();
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleQuizSubmit(); });
+}
+
+function handleQuizSubmit() {
+    if (s2Locked) return;
+    s2Locked = true;
+    const q = s2Items[s2Idx];
+    const input = $('s2-input');
+    const ans = input.value.trim();
+    const isCorrect = ans === q.options[q.correct];
+    if (isCorrect) s2Score++;
+    else addMistake('s2', q.scenario, ans || '（未作答）', q.options[q.correct], q.explain);
+
+    $('exp').className = `explain ${isCorrect ? 'correct' : 'wrong'}`;
+    $('exp').innerHTML = (isCorrect ? '✅ 答对了！' : '❌ 正确答案：') + q.explain;
+    input.disabled = true;
+
+    const btn = $('s2submit');
+    btn.textContent = s2Idx >= s2Items.length - 1 ? '查看结果' : '下一题';
+    btn.onclick = () => {
+        if (s2Idx >= s2Items.length - 1) showQuizResult(mainEl());
+        else { s2Idx++; s2Locked = false; drawQuiz(mainEl()); }
+    };
+}
+
+function showQuizResult(main) {
+    showScreen(main, {
+        title: '🎉 第二阶段完成！',
+        message: `你答对了 ${s2Score} / ${s2Items.length} 题。<br><span class="next-hint">下次进入将开启第三阶段：完成会议纪要。</span>`,
+        buttonText: '继续培训项目',
+        onButton: 'saveStage(3);continueTraining()'
+    });
+}
+
+// ═══════════════════════════════════════════
+// Stage 3: Meeting
+// ═══════════════════════════════════════════
+function renderStage3(main) {
+    currentMeeting = MEETING_MATERIALS[Math.floor(Math.random() * MEETING_MATERIALS.length)];
+    main.innerHTML = `
+        <div class="stage-head"><h3>第三阶段：完成一篇会议纪要</h3></div>
+        <div class="task-desc">下面是一段原始会议记录，请整理成规范的会议纪要。总字数不少于 80 字。</div>
+        <div class="meeting-box">
+            <strong>📋 原始会议记录</strong>
+            <p style="margin-top:6px;line-height:1.7;">${currentMeeting.raw}</p>
+        </div>
+        <div class="form">
+            <div class="form-row"><label>会议主题</label><input id="f-topic" placeholder="一句话概括会议主题"></div>
+            <div class="form-row"><label>会议时间</label><input id="f-time" placeholder="例：2026-07-15 14:00"></div>
+            <div class="form-row"><label>参会人</label><input id="f-attendees" placeholder="列出参会人员"></div>
+            <div class="form-row"><label>会议结论</label><textarea id="f-conclusion" rows="2" placeholder="总结达成的共识"></textarea></div>
+            <div class="form-row"><label>关键讨论过程</label><textarea id="f-discussion" rows="2" placeholder="提炼关键观点"></textarea></div>
+            <div class="form-row"><label>行动计划</label><textarea id="f-plan" rows="2" placeholder="要做什么、怎么推进"></textarea></div>
+            <div class="form-split">
+                <div class="form-row"><label>负责人</label><input id="f-owner" placeholder="谁来做"></div>
+                <div class="form-row"><label>截止时间</label><input id="f-deadline" placeholder="ddl"></div>
+            </div>
+            <div class="form-counter" id="counter">总字数：0 / 80</div>
+            <button class="btn" id="submitBtn" disabled onclick="submitMeeting()">提交会议纪要</button>
+        </div>
+    `;
+    const ids = ['f-topic', 'f-time', 'f-attendees', 'f-conclusion', 'f-discussion', 'f-plan', 'f-owner', 'f-deadline'];
+    const update = () => {
+        let total = 0;
+        ids.forEach(id => { total += ($(id).value || '').length; });
+        const canPass = ids.every(id => $(id).value.trim()) && total >= 80;
+        $('submitBtn').disabled = !canPass;
+        $('counter').innerHTML = `总字数：${total} / 80${canPass ? ' <span class="ok">· 已达标</span>' : ''}`;
+    };
+    ids.forEach(id => $(id).addEventListener('input', update));
+}
+
+function submitMeeting() {
+    showScreen(mainEl(), {
+        title: '会议纪要已完成',
+        message: '你已经掌握了从识别、判断到实际记录的完整流程。',
+        buttonText: '继续培训项目',
+        onButton: 'saveStage(4);continueTraining()'
+    });
+}
+
+// ═══════════════════════════════════════════
+// Complete
+// ═══════════════════════════════════════════
+function renderComplete(main) {
+    showScreen(main, {
+        title: '十二条令训练完成',
+        message: '你已经掌握了从识别、判断到实际记录的完整流程。',
+        buttonText: '继续培训项目',
+        onButton: 'continueTraining()',
+        iconSize: 64
+    });
+}
+
+// ═══════════════════════════════════════════
+// Init
+// ═══════════════════════════════════════════
+$('mistakeModal').addEventListener('click', (e) => {
+    if (e.target === $('mistakeModal')) closeMistakeBook();
+});
+
+render();
+</script>
+</body>
+</html>

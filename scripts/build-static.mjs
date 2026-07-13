@@ -22,6 +22,7 @@ mkdirSync(dist, { recursive: true });
   '.nojekyll',
   'index.html',
   'mini-games-bridge.js',
+  'twelve-rules.html',
   'assets',
   'cinematic',
   'game-assets',

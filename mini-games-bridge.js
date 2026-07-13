@@ -1,6 +1,7 @@
 (() => {
   const COMPLETE = 'bfe-mini-games-complete';
   const CANCEL = 'bfe-mini-games-cancel';
+  const RULES_COMPLETE = 'bfe-twelve-rules-complete';
   const FRAME_ID = 'bfe-mini-games-layer';
   let bypassNextClick = false;
   let pendingTrigger = null;
@@ -43,6 +44,16 @@
     }, 80);
   };
 
+  const openTwelveRules = () => {
+    const iframe = document.querySelector(`#${FRAME_ID} iframe`);
+    if (!iframe) {
+      continueOriginalGame();
+      return;
+    }
+    iframe.src = './twelve-rules.html?embed=1';
+    iframe.title = '十二条令训练营';
+  };
+
   const openLayer = () => {
     closeLayer();
     document.documentElement.classList.add('bfe-mini-games-open');
@@ -75,7 +86,8 @@
   window.addEventListener('message', (event) => {
     if (!sameOriginMessage(event)) return;
     const type = event.data && event.data.type;
-    if (type === COMPLETE) continueOriginalGame();
+    if (type === COMPLETE) openTwelveRules();
+    if (type === RULES_COMPLETE) continueOriginalGame();
     if (type === CANCEL) closeLayer();
   });
 })();
