@@ -1,0 +1,701 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>组织导航局</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: "Microsoft YaHei", "PingFang SC", system-ui, -apple-system, sans-serif;
+    background: #f4f9ff;
+    min-height: 100vh;
+    color: #143b78;
+}
+
+.wrap { max-width: 1180px; margin: 0 auto; padding: 24px; }
+.header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; gap: 16px; }
+.header h1 { font-size: 28px; color: #143b78; }
+.header-right { display: flex; align-items: center; gap: 12px; }
+.stage-pill { padding: 6px 16px; border-radius: 999px; background: #e2f3ff; color: #2f80ed; font-size: 14px; font-weight: 900; }
+.mistake-btn { display: flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 999px; background: #fff; border: 1px solid #cde6fb; color: #2f80ed; font-size: 13px; font-weight: 900; cursor: pointer; transition: all 160ms; }
+.mistake-btn:hover { background: #f4f9ff; border-color: #2f80ed; }
+.mistake-btn .badge { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: #ef4444; color: #fff; font-size: 11px; font-weight: 900; }
+.mistake-btn .badge:empty { display: none; }
+.shell { display: grid; grid-template-columns: 300px 1fr; gap: 20px; background: #fff; border-radius: 20px; box-shadow: 0 20px 50px rgba(20,59,120,0.12); overflow: hidden; min-height: 600px; }
+
+/* Sidebar */
+.sidebar { background: linear-gradient(180deg, #143b78 0%, #1f5bb8 100%); color: #fff; padding: 28px 24px; display: flex; flex-direction: column; gap: 28px; position: relative; }
+.sidebar::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 18% 14%, rgba(75,167,255,0.28), transparent 32%), radial-gradient(circle at 88% 92%, rgba(255,189,50,0.18), transparent 30%); pointer-events: none; }
+.sidebar > * { position: relative; z-index: 1; }
+.brand-kicker { display: inline-block; padding: 5px 10px; background: rgba(255,255,255,0.12); border-radius: 999px; font-size: 11px; font-weight: 900; letter-spacing: 0.08em; width: fit-content; }
+.sidebar h2 { font-size: 26px; line-height: 1.15; }
+.sidebar p { font-size: 13px; color: rgba(255,255,255,0.7); font-weight: 700; line-height: 1.5; }
+.steps { display: grid; gap: 10px; }
+.step { display: grid; grid-template-columns: 32px 1fr; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; font-size: 14px; font-weight: 800; color: rgba(255,255,255,0.5); transition: all 200ms; }
+.step.active { background: rgba(255,255,255,0.15); color: #fff; }
+.step.done { color: #8ef0a4; }
+.step-dot { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.1); font-size: 14px; font-weight: 900; }
+.step.active .step-dot { background: linear-gradient(180deg, #ffcf4a, #ff9c22); color: #7a3500; }
+.step.done .step-dot { background: rgba(142,240,164,0.22); }
+.stage-label { padding: 14px; background: rgba(255,255,255,0.08); border-radius: 12px; }
+.stage-label span { font-size: 11px; font-weight: 900; letter-spacing: 0.1em; color: rgba(255,255,255,0.6); }
+.stage-label strong { display: block; font-size: 18px; margin-top: 4px; }
+.sidebar-img { margin-top: auto; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.18); }
+.sidebar-img img { width: 100%; height: 140px; object-fit: cover; display: block; }
+
+/* Main */
+.main { padding: 28px 32px; display: flex; flex-direction: column; gap: 16px; }
+.stage-head { display: flex; align-items: center; justify-content: space-between; }
+.stage-head h3 { font-size: 22px; color: #143b78; }
+.task-desc { font-size: 14px; color: #526b86; font-weight: 700; margin-top: 4px; }
+
+/* Progress bar */
+.prog-bar { position: relative; height: 22px; border-radius: 999px; background: #e2f3ff; overflow: hidden; }
+.prog-fill { position: absolute; inset: 0; background: linear-gradient(90deg, #2f80ed, #36d17c); transition: width 320ms ease; }
+.prog-bar span { position: absolute; inset: 0; display: grid; place-items: center; font-size: 12px; font-weight: 900; color: #143b78; }
+
+/* Buttons */
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border: 0; border-radius: 999px; background: linear-gradient(180deg, #2f80ed, #1456d6); color: #fff; font-size: 14px; font-weight: 900; cursor: pointer; box-shadow: 0 10px 22px rgba(47,128,237,0.22); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn:not(:disabled):hover { transform: translateY(-1px); box-shadow: 0 12px 28px rgba(47,128,237,0.28); }
+.btn-outline { background: #fff; color: #2f80ed; border: 1px solid #cde6fb; box-shadow: none; }
+.btn-outline:hover { background: #f4f9ff; border-color: #2f80ed; }
+
+/* ── Stage 1: Org Tree (Redesigned) ── */
+.org-tree { display: grid; gap: 10px; align-content: start; padding-top: 4px; }
+.org-root { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: linear-gradient(180deg, #143b78, #1f5bb8); color: #fff; border-radius: 12px; font-size: 15px; font-weight: 900; }
+.org-root .root-icon { width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.18); display: grid; place-items: center; font-size: 12px; font-weight: 900; }
+.org-children { display: grid; gap: 8px; position: relative; padding-left: 16px; }
+.org-children::before { content: ""; position: absolute; left: 4px; top: 0; bottom: 0; width: 2px; background: linear-gradient(180deg, #cde6fb, #e2f3ff); }
+.org-child { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: 1px dashed #cde6fb; border-radius: 10px; background: #f4f9ff; color: #94a3b8; font-size: 13px; font-weight: 700; min-height: 42px; transition: all 200ms; }
+.org-child.empty { border-color: #d4e4f7; background: #fbfdff; }
+.org-child.empty .child-label::after { content: "请从下方选择部门卡片"; font-weight: 700; color: #b0c4d8; font-size: 12px; }
+.org-child.filled { border-style: solid; border-color: #22b965; background: linear-gradient(180deg, #f5fff8, #d8ffe7); color: #12703b; font-weight: 800; }
+.org-child.wrong { border-color: #ef4444; background: #fff5f5; color: #b91c1c; animation: cardShake 480ms ease; }
+@keyframes cardShake { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-5px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } }
+
+.child-num { width: 24px; height: 24px; border-radius: 50%; background: #e2f3ff; color: #2f80ed; display: grid; place-items: center; font-size: 11px; font-weight: 900; flex-shrink: 0; }
+.org-child.filled .child-num { background: #22b965; color: #fff; }
+
+.dept-cards { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #e2f3ff; }
+.dept-card { padding: 8px 16px; border: 1px solid #cde6fb; border-radius: 999px; background: #fff; color: #143b78; font-size: 13px; font-weight: 800; cursor: pointer; transition: all 160ms; }
+.dept-card:hover:not(.used) { border-color: #2f80ed; background: #eef6ff; }
+.dept-card.used { opacity: 0.4; cursor: default; }
+
+.org-child.drag-over { border-color: #2f80ed; background: #eef6ff; }
+.dept-card.dragging { opacity: 0.7; }
+
+.s1-hint { font-size: 13px; color: #526b86; font-weight: 700; }
+.s1-hint.ok { color: #22b965; }
+.s1-hint.err { color: #b91c1c; }
+
+/* ── Stage 2: Match ── */
+.match-groups { display: grid; gap: 16px; }
+.match-group { display: grid; gap: 8px; padding: 16px; border: 1px solid #cde6fb; border-radius: 14px; background: #f4f9ff; }
+.match-prompt { font-size: 14px; font-weight: 800; color: #143b78; }
+.match-options { display: flex; flex-wrap: wrap; gap: 8px; }
+.match-option { padding: 8px 16px; border: 1px solid #cde6fb; border-radius: 999px; background: #fff; color: #143b78; font-size: 13px; font-weight: 800; cursor: pointer; transition: all 160ms; }
+.match-option:hover:not(.selected):not(.disabled) { border-color: #2f80ed; background: #eef6ff; }
+.match-option.selected { border-color: #2f80ed; background: #2f80ed; color: #fff; }
+.match-option.correct { border-color: #22b965; background: #d4edda; color: #155724; }
+.match-option.wrong { border-color: #ef4444; background: #ffe0e0; color: #b91c1c; }
+.match-option.disabled { cursor: default; opacity: 0.6; }
+
+.match-feedback { font-size: 13px; font-weight: 700; padding: 8px 12px; border-radius: 10px; }
+.match-feedback.ok { background: #ddffe8; color: #12703b; }
+.match-feedback.err { background: #ffe1e1; color: #b91c1c; }
+.match-feedback .correct-answer { display: block; margin-top: 4px; font-weight: 900; }
+
+/* ── Stage 3: Scenario ── */
+.scenario { display: grid; gap: 14px; }
+.scenario-card { padding: 18px 20px; border: 1px solid #cde6fb; border-radius: 14px; background: #fff; }
+.scenario-kicker { display: inline-block; padding: 5px 12px; border-radius: 999px; background: #e2f3ff; color: #2f80ed; font-size: 12px; font-weight: 900; margin-bottom: 8px; }
+.scenario-text { font-size: 15px; color: #143b78; font-weight: 700; line-height: 1.6; }
+
+/* ── Screen ── */
+.screen { display: grid; gap: 12px; place-items: center; text-align: center; padding: 40px; flex: 1; align-content: center; }
+.screen .icon { color: #22b965; }
+.screen h2 { font-size: 26px; color: #143b78; }
+.screen p { font-size: 15px; color: #526b86; font-weight: 700; }
+.screen .btn-wrap { display: flex; gap: 12px; margin-top: 12px; }
+.next-hint { display: inline-block; margin-top: 8px; color: #2f80ed; font-size: 13px; font-weight: 900; }
+
+/* ── Modal ── */
+.modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.35); display: grid; place-items: center; z-index: 100; }
+.modal { background: #fff; border-radius: 20px; padding: 28px; max-width: 560px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 50px rgba(20,59,120,0.2); }
+.modal h3 { font-size: 20px; color: #143b78; margin-bottom: 12px; }
+.modal-close { float: right; width: 32px; height: 32px; border-radius: 50%; border: 1px solid #cde6fb; background: #fff; color: #526b86; font-size: 18px; cursor: pointer; }
+.modal-close:hover { background: #f4f9ff; }
+.mistake-item { display: grid; gap: 4px; padding: 12px; border: 1px solid #cde6fb; border-radius: 12px; margin-bottom: 8px; }
+.mistake-item:last-child { margin-bottom: 0; }
+.mistake-item .q { font-size: 13px; font-weight: 800; color: #143b78; }
+.mistake-item .a { font-size: 12px; font-weight: 700; color: #526b86; }
+.mistake-item .a span { color: #22b965; }
+.modal-empty { font-size: 14px; color: #526b86; text-align: center; padding: 20px; }
+.modal-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding-top: 12px; border-top: 1px solid #cde6fb; }
+.modal-footer span { font-size: 12px; color: #526b86; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+    <div class="header">
+        <h1>组织导航局</h1>
+        <div class="header-right">
+            <span class="stage-pill" id="stagePill">第一关</span>
+            <button class="mistake-btn" onclick="openMistakeBook()">
+                📖 错题本 <span class="badge" id="mistakeBadge"></span>
+            </button>
+        </div>
+    </div>
+
+    <div class="shell">
+        <aside class="sidebar">
+            <span class="brand-kicker">新人培训 · 组织认知</span>
+            <h2>组织导航局</h2>
+            <p>看懂公司结构，找到协作路径</p>
+            <div class="steps">
+                <div class="step active" id="step1"><div class="step-dot">1</div><span>部门归位</span></div>
+                <div class="step" id="step2"><div class="step-dot">2</div><span>业务配对</span></div>
+                <div class="step" id="step3"><div class="step-dot">3</div><span>协作派单</span></div>
+            </div>
+            <div class="stage-label">
+                <span>CURRENT STAGE</span>
+                <strong id="stageLabel">部门归位</strong>
+            </div>
+            <div class="sidebar-img">
+                <img src="./public/assets/lessons/company-profile.png" alt="公司介绍">
+            </div>
+        </aside>
+
+        <main class="main" id="main"></main>
+    </div>
+</div>
+
+<div class="modal-bg" id="mistakeModal" style="display:none;">
+    <div class="modal">
+        <button class="modal-close" onclick="closeMistakeBook()">×</button>
+        <h3>📖 错题本</h3>
+        <div id="mistakeList"></div>
+        <div class="modal-footer">
+            <span id="mistakeCount">0 道错题</span>
+            <button class="btn btn-outline" onclick="clearMistakes()">清空</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'bfe-org-game-progress-v1';
+const MISTAKES_KEY = 'bfe-org-game-mistakes-v1';
+const COMPLETE_MESSAGE = 'bfe-org-game-complete';
+
+const DEPARTMENTS = [
+    { id: 'strategy', name: '战略委员会' },
+    { id: 'president-office', name: '总裁办' },
+    { id: 'finance', name: '财务部' },
+    { id: 'tech', name: '技术部' },
+    { id: 'biz-dev', name: '业务发展' },
+    { id: 'product-ops', name: '产品及运营' },
+    { id: 'other', name: '其他（待设置部门）' }
+];
+
+const BUSINESS_UNITS = [
+    { unit: '物流事业部', brand: '出口易', financeContact: '陈滢 / 陈丽纯 / 莫何冰 / 林静欣' },
+    { unit: 'SAAS事业部', brand: '亚速维亿', financeContact: '林静欣' },
+    { unit: 'DM项目', brand: '广州斗满 / 法国DM / 德国DM', financeContact: '林静欣' }
+];
+
+const SCENARIOS = [
+    { id: 's1', prompt: '你需要确认报销规则、发票要求和合同审批流程，应该优先找哪个部门？', answer: 'finance', answerName: '财务部', explanation: '财务部的核心职责包含报销、发票、合同付款等事项。' },
+    { id: 's2', prompt: '内部系统出现登录异常，影响工作推进，应该优先找哪个部门协助排查？', answer: 'tech', answerName: '技术部', explanation: '技术部负责系统、技术支持、平台能力建设。' },
+    { id: 's3', prompt: '客户反馈后台报表导出慢，希望优化功能体验，应该优先关联哪个部门？', answer: 'product-ops', answerName: '产品及运营', explanation: '产品及运营负责产品体验、运营策略、功能反馈。' },
+    { id: 's4', prompt: '客户提出一个新的合作模式，需要判断是否值得推进和由谁跟进，应该优先关联哪个方向？', answer: 'biz-dev', answerName: '业务发展', explanation: '业务发展部门负责业务拓展、合作机会、增长方向。' },
+    { id: 's5', prompt: '一个事项涉及多个部门资源协调，需要更高层统一判断和协调。', answer: 'president-office', answerName: '总裁办', explanation: '总裁办负责综合协调与重点事项推进，跨部门事项优先找总裁办。' },
+    { id: 's6', prompt: '公司需要制定下一年的战略方向和重点投资领域，应该找哪个部门？', answer: 'strategy', answerName: '战略委员会', explanation: '战略委员会负责重大方向与战略判断。' },
+    { id: 's7', prompt: '新员工入职，需要办理工位、门禁、电脑领取，应该找哪个部门协调？', answer: 'president-office', answerName: '总裁办', explanation: '总裁办负责综合协调，行政后勤类事项优先找总裁办。' }
+];
+
+const BRAND_OPTIONS = ['出口易', '亚速维亿', '广州斗满 / 法国DM / 德国DM', '贝法易集团', '物流事业部'];
+const FINANCE_OPTIONS = ['林静欣', '陈滢', '陈丽纯', '莫何冰', '陈滢 / 陈丽纯 / 莫何冰 / 林静欣', '肖友泉'];
+
+/* State */
+let stage = loadStage();
+let mistakes = [];
+let s1Depts = [];
+let s1PlacedCount = 0;
+let s1Locked = false;
+
+let s2Group = null;
+let s2Groups = [];
+let s2RoundIdx = 0;
+let s2BrandLocked = false;
+let s2FinanceLocked = false;
+
+let s3Scenarios = [];
+let s3Idx = 0;
+let s3Score = 0;
+
+/* Storage & Utils */
+function loadStage() {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+            const n = parseInt(raw, 10);
+            if (n >= 1 && n <= 4) return n;
+        }
+    } catch {}
+    return 1;
+}
+
+function saveStage(nextStage) {
+    try { localStorage.setItem(STORAGE_KEY, String(nextStage)); } catch {}
+}
+
+function load() {
+    try { mistakes = JSON.parse(localStorage.getItem(MISTAKES_KEY)) || []; } catch { mistakes = []; }
+}
+function saveMistakes() { localStorage.setItem(MISTAKES_KEY, JSON.stringify(mistakes)); }
+
+function recordMistake(type, question, userAnswer, correctAnswer) {
+    mistakes.unshift({ type, question, userAnswer, correctAnswer, ts: Date.now() });
+    if (mistakes.length > 30) mistakes.pop();
+    saveMistakes();
+}
+
+function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
+function $(id) { return document.getElementById(id); }
+function updateBadge() {
+    const badge = $('mistakeBadge');
+    badge.textContent = mistakes.length || '';
+    badge.style.display = mistakes.length ? '' : 'none';
+    $('mistakeCount').textContent = `${mistakes.length} 道错题`;
+}
+function setStageLabel(t) { $('stageLabel').textContent = t; }
+function setStagePill(t) { $('stagePill').textContent = t; }
+function updateSteps() {
+    for (let i = 1; i <= 3; i++) {
+        const el = $('step' + i);
+        el.classList.remove('active', 'done');
+        if (i < stage) el.classList.add('done');
+        if (i === stage) el.classList.add('active');
+    }
+}
+
+/* Render Entry */
+function render() {
+    stage = loadStage();
+    load();
+    updateBadge();
+    updateSteps();
+    const main = $('main');
+    main.innerHTML = '';
+    if (stage === 1) { setStagePill('第一关'); setStageLabel('部门归位'); renderStage1(main); }
+    else if (stage === 2) { setStagePill('第二关'); setStageLabel('业务配对'); renderStage2(main); }
+    else if (stage === 3) { setStagePill('第三关'); setStageLabel('协作派单'); renderStage3(main); }
+    else { renderComplete(main); }
+}
+
+/* ═══ Stage 1: 部门归位 (拖拽 + 按顺序点击 — 固定顺序 + 完整 7 项) ═══ */
+function renderStage1(main) {
+    s1Depts = [...DEPARTMENTS];
+    s1PlacedCount = 0;
+    s1Locked = false;
+
+    main.innerHTML = `
+        <div class="stage-head"><h3>第一关：部门归位</h3></div>
+        <div class="task-desc">按 1→7 的顺序点击部门卡片，或拖动卡片到对应位置。</div>
+        <div class="prog-bar"><div class="prog-fill" id="s1fill" style="width:0%"></div><span id="s1prog">0 / ${s1Depts.length}</span></div>
+        <div class="org-tree" id="orgTree">
+            <div class="org-root"><span class="root-icon">★</span> 肖友泉</div>
+            <div class="org-children" id="orgChildren"></div>
+        </div>
+        <div class="dept-cards" id="deptCards"></div>
+        <div class="s1-hint" id="s1hint"></div>
+    `;
+
+    const children = $('orgChildren');
+    s1Depts.forEach((d, i) => {
+        const node = document.createElement('div');
+        node.className = 'org-child empty';
+        node.dataset.correctId = d.id;
+        node.innerHTML = `<span class="child-num">${i + 1}</span><span class="child-label">待放置</span>`;
+        node.addEventListener('dragover', (e) => { e.preventDefault(); node.classList.add('drag-over'); });
+        node.addEventListener('dragleave', () => { node.classList.remove('drag-over'); });
+        node.addEventListener('drop', (e) => { e.preventDefault(); node.classList.remove('drag-over'); handleS1Drop(node); });
+        children.appendChild(node);
+    });
+
+    const cards = $('deptCards');
+    shuffle(s1Depts).forEach(d => {
+        const card = document.createElement('div');
+        card.className = 'dept-card';
+        card.textContent = d.name;
+        card.dataset.id = d.id;
+        card.draggable = true;
+        card.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', d.id); card.classList.add('dragging'); });
+        card.addEventListener('dragend', () => { card.classList.remove('dragging'); });
+        card.addEventListener('click', () => handleS1CardClick(card, d.id));
+        cards.appendChild(card);
+    });
+}
+
+function handleS1CardClick(card, id) {
+    if (s1Locked || card.classList.contains('used')) return;
+    // Find the next empty slot (in order)
+    const slots = document.querySelectorAll('.org-child.empty');
+    if (slots.length === 0) return;
+    const nextSlot = slots[0]; // first empty slot
+    const correctId = nextSlot.dataset.correctId;
+
+    s1Locked = true;
+    if (id === correctId) {
+        card.classList.add('used');
+        const deptName = DEPARTMENTS.find(d => d.id === id)?.name || '';
+        nextSlot.classList.remove('empty');
+        nextSlot.classList.add('filled');
+        nextSlot.querySelector('.child-label').textContent = deptName;
+        s1PlacedCount++;
+        $('s1hint').textContent = '✅ 放入正确！';
+        $('s1hint').className = 's1-hint ok';
+    } else {
+        card.classList.add('wrong');
+        nextSlot.classList.add('wrong');
+        setTimeout(() => { card.classList.remove('wrong'); nextSlot.classList.remove('wrong'); }, 600);
+        $('s1hint').textContent = '❌ 放错了！想想这个部门应该放在哪个位置。';
+        $('s1hint').className = 's1-hint err';
+        recordMistake('department', '部门归位：' + card.textContent, '放错槽位', correctId);
+        updateBadge();
+        s1Locked = false;
+        return;
+    }
+
+    const done = s1PlacedCount;
+    $('s1fill').style.width = (done / s1Depts.length * 100) + '%';
+    $('s1prog').textContent = `${done} / ${s1Depts.length}`;
+
+    setTimeout(() => {
+        s1Locked = false;
+        if (done === s1Depts.length) {
+            $('s1hint').textContent = '✅ 全部归位正确！本次训练完成。';
+            $('s1hint').className = 's1-hint ok';
+            setTimeout(() => finishStage(2, '第一关完成！', '你已经完成主要部门归位。', '下次进入将开启第二关：业务板块配对。'), 800);
+        }
+    }, 400);
+}
+
+function handleS1Drop(slot) {
+    if (s1Locked || slot.classList.contains('filled')) return;
+    const dt = window._s1DragData;
+    if (!dt) return;
+    const card = document.querySelector(`.dept-card[data-id="${dt.id}"]`);
+    if (!card || card.classList.contains('used')) return;
+    s1Locked = true;
+    const slotCorrectId = slot.dataset.correctId;
+    if (dt.id === slotCorrectId) {
+        card.classList.add('used');
+        const deptName = DEPARTMENTS.find(d => d.id === dt.id)?.name || '';
+        slot.classList.remove('empty');
+        slot.classList.add('filled');
+        slot.querySelector('.child-label').textContent = deptName;
+        s1PlacedCount++;
+        $('s1hint').textContent = '✅ 放入正确！';
+        $('s1hint').className = 's1-hint ok';
+    } else {
+        card.classList.add('wrong');
+        slot.classList.add('wrong');
+        setTimeout(() => { card.classList.remove('wrong'); slot.classList.remove('wrong'); }, 600);
+        $('s1hint').textContent = '❌ 放错了！想想这个部门应该放在哪个位置。';
+        $('s1hint').className = 's1-hint err';
+        recordMistake('department', '部门归位：' + card.textContent, '放错槽位', slotCorrectId);
+        updateBadge();
+        s1Locked = false;
+        return;
+    }
+    const done = s1PlacedCount;
+    $('s1fill').style.width = (done / s1Depts.length * 100) + '%';
+    $('s1prog').textContent = `${done} / ${s1Depts.length}`;
+    setTimeout(() => {
+        s1Locked = false;
+        if (done === s1Depts.length) {
+            $('s1hint').textContent = '✅ 全部归位正确！本次训练完成。';
+            $('s1hint').className = 's1-hint ok';
+            setTimeout(() => finishStage(2, '第一关完成！', '你已经完成主要部门归位。', '下次进入将开启第二关：业务板块配对。'), 800);
+        }
+    }, 400);
+}
+
+/* ═══ Stage 2: 业务配对 (必须选对才能继续) ═══ */
+function renderStage2(main) {
+    s2Groups = shuffle(BUSINESS_UNITS).slice(0, 2);
+    s2RoundIdx = 0;
+    drawMatchRound(main);
+}
+
+function drawMatchRound(main) {
+    if (s2RoundIdx >= s2Groups.length) {
+        showMatchComplete(main);
+        return;
+    }
+    s2Group = s2Groups[s2RoundIdx];
+    s2BrandLocked = false;
+    s2FinanceLocked = false;
+
+    const brandOpts = shuffle(BRAND_OPTIONS);
+    const financeOpts = shuffle(FINANCE_OPTIONS);
+
+    main.innerHTML = `
+        <div class="stage-head"><h3>第二关：业务板块配对</h3></div>
+        <div class="task-desc">第 ${s2RoundIdx + 1} 组 / 共 ${s2Groups.length} 组。从三个维度配对。</div>
+        <div class="prog-bar"><div class="prog-fill" style="width:${(s2RoundIdx / s2Groups.length) * 100}%\"></div><span>${s2RoundIdx} / ${s2Groups.length}</span></div>
+        <div class="match-groups">
+            <div class="match-group">
+                <div class="match-prompt">事业部：<strong>${s2Group.unit}</strong></div>
+                <div class="match-prompt" style="margin-top:8px;">对应的核心品牌是？</div>
+                <div class="match-options" id="brandOpts"></div>
+            </div>
+            <div class="match-group" id="financeGroup" style="opacity:0.4; pointer-events:none;">
+                <div class="match-prompt">对应的财务对接人是？</div>
+                <div class="match-options" id="financeOpts"></div>
+            </div>
+        </div>
+        <div id="matchFeedback"></div>
+        <button class="btn" id="s2btn" disabled onclick="handleS2Next()">配对完成，进入下一关</button>
+    `;
+
+    const brandEl = $('brandOpts');
+    brandOpts.forEach((opt) => {
+        const btn = document.createElement('button');
+        btn.className = 'match-option';
+        btn.textContent = opt;
+        btn.onclick = () => {
+            if (s2BrandLocked) return;
+            s2BrandLocked = true;
+            const btns = brandEl.querySelectorAll('.match-option');
+            btns.forEach(b => b.classList.add('disabled'));
+            if (opt === s2Group.brand) {
+                btn.classList.add('correct');
+                $('financeGroup').style.opacity = '';
+                $('financeGroup').style.pointerEvents = '';
+                $('matchFeedback').className = '';
+                $('matchFeedback').innerHTML = '';
+            } else {
+                btn.classList.add('wrong');
+                $('matchFeedback').className = 'match-feedback err';
+                $('matchFeedback').innerHTML = '❌ 回答错误，请重新选择。';
+                recordMistake('business-unit', `${s2Group.unit} 的核心品牌`, opt, s2Group.brand);
+                updateBadge();
+                setTimeout(() => {
+                    btns.forEach(b => { b.classList.remove('disabled', 'correct', 'wrong'); });
+                    s2BrandLocked = false;
+                    $('matchFeedback').className = '';
+                    $('matchFeedback').innerHTML = '';
+                }, 1200);
+            }
+        };
+        brandEl.appendChild(btn);
+    });
+
+    const financeEl = $('financeOpts');
+    financeOpts.forEach((opt) => {
+        const btn = document.createElement('button');
+        btn.className = 'match-option';
+        btn.textContent = opt;
+        btn.onclick = () => {
+            if (s2FinanceLocked || !s2BrandLocked) return;
+            s2FinanceLocked = true;
+            const btns = financeEl.querySelectorAll('.match-option');
+            btns.forEach(b => b.classList.add('disabled'));
+            if (opt === s2Group.financeContact) {
+                btn.classList.add('correct');
+                $('s2btn').disabled = false;
+                $('matchFeedback').className = '';
+                $('matchFeedback').innerHTML = '';
+            } else {
+                btn.classList.add('wrong');
+                $('matchFeedback').className = 'match-feedback err';
+                $('matchFeedback').innerHTML = '❌ 回答错误，请重新选择。';
+                recordMistake('business-unit', `${s2Group.unit} 的财务对接人`, opt, s2Group.financeContact);
+                updateBadge();
+                setTimeout(() => {
+                    btns.forEach(b => { b.classList.remove('disabled', 'correct', 'wrong'); });
+                    s2FinanceLocked = false;
+                    $('matchFeedback').className = '';
+                    $('matchFeedback').innerHTML = '';
+                }, 1200);
+            }
+        };
+        financeEl.appendChild(btn);
+    });
+}
+
+function showMatchComplete(main) {
+    finishStage(3, '第二关完成！', '你已经完成事业部、品牌和财务对接关系配对。', '下次进入将开启第三关：协作派单。');
+}
+
+function handleS2Next() {
+    s2RoundIdx++;
+    drawMatchRound(document.getElementById('main'));
+}
+
+/* ═══ Stage 3: 协作派单 ═══ */
+function renderStage3(main) {
+    s3Scenarios = shuffle(SCENARIOS).slice(0, 3);
+    s3Idx = 0;
+    s3Score = 0;
+
+    main.innerHTML = `
+        <div class="stage-head"><h3>第三关：协作派单</h3></div>
+        <div class="task-desc">根据场景判断第一联系人。完成 3 个场景。</div>
+        <div class="prog-bar"><div class="prog-fill" id="s3fill" style="width:0%"></div><span id="s3prog">0 / 3</span></div>
+        <div class="scenario" id="s3scenario"></div>
+        <button class="btn" id="s3btn" onclick="handleS3Next()" style="display:none;">下一题</button>
+    `;
+    drawS3Scenario();
+}
+
+function drawS3Scenario() {
+    const q = s3Scenarios[s3Idx];
+    let deptOpts = shuffle(DEPARTMENTS).slice(0, 4);
+    if (!deptOpts.find(d => d.id === q.answer)) deptOpts[0] = DEPARTMENTS.find(d => d.id === q.answer);
+    deptOpts = shuffle(deptOpts);
+
+    const el = $('s3scenario');
+    el.innerHTML = `
+        <div class="scenario-card">
+            <span class="scenario-kicker">场景 ${s3Idx + 1} / 3</span>
+            <p class="scenario-text">${q.prompt}</p>
+        </div>
+        <div class="match-options" id="s3opts"></div>
+        <div id="s3explain"></div>
+    `;
+
+    const optsEl = $('s3opts');
+    deptOpts.forEach(d => {
+        const btn = document.createElement('button');
+        btn.className = 'match-option';
+        btn.textContent = d.name;
+        btn.dataset.id = d.id;
+        btn.onclick = () => handleS3Pick(btn, d);
+        optsEl.appendChild(btn);
+    });
+
+    $('s3fill').style.width = ((s3Idx / 3) * 100) + '%';
+    $('s3prog').textContent = `${s3Idx} / 3`;
+}
+
+function handleS3Pick(btn, dept) {
+    const q = s3Scenarios[s3Idx];
+    const isCorrect = dept.id === q.answer;
+    if (isCorrect) s3Score++;
+
+    const btns = $('s3opts').querySelectorAll('.match-option');
+    btns.forEach(b => {
+        b.classList.add('disabled');
+        if (b.dataset.id === q.answer) b.classList.add('correct');
+    });
+    if (!isCorrect) {
+        btn.classList.add('wrong');
+        recordMistake('scenario', q.prompt, dept.name, q.answerName);
+        updateBadge();
+    }
+
+    const exp = $('s3explain');
+    exp.className = `match-feedback ${isCorrect ? 'ok' : 'err'}`;
+    exp.innerHTML = `${isCorrect ? '✅ ' : '❌ '}解析：${q.explanation}`;
+
+    const nextBtn = $('s3btn');
+    nextBtn.style.display = '';
+    nextBtn.textContent = s3Idx >= 2 ? '查看结果' : '下一题';
+}
+
+function handleS3Next() {
+    if (s3Idx >= 2) { saveStage(4); stage = 4; render(); }
+    else { s3Idx++; drawS3Scenario(); $('s3btn').style.display = 'none'; }
+}
+
+function finishStage(nextStage, title, message, nextHint) {
+    saveStage(nextStage);
+    setStagePill('本次完成');
+    setStageLabel('下次继续');
+    $('main').innerHTML = `
+        <div class="screen">
+            <div class="icon">🎉</div>
+            <h2>${title}</h2>
+            <p>${message}<br><span class="next-hint">${nextHint}</span></p>
+            <button class="btn" onclick="notifyComplete()">继续培训项目</button>
+        </div>
+    `;
+}
+
+/* ═══ Complete ═══ */
+function renderComplete(main) {
+    setStagePill('已完成');
+    setStageLabel('组织导航完成');
+    for (let i = 1; i <= 3; i++) {
+        $('step' + i).classList.remove('active');
+        $('step' + i).classList.add('done');
+    }
+    main.innerHTML = `
+        <div class="screen">
+            <div class="icon"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+            <h2>组织导航完成！</h2>
+            <p>你已经了解主要部门、业务板块和常见协作路径。<br>第三关答对 ${s3Score} / 3 题。</p>
+            <div class="btn-wrap">
+                <button class="btn" onclick="restartGame()">再玩一次</button>
+                <button class="btn btn-outline" onclick="notifyComplete()">继续培训项目</button>
+            </div>
+        </div>
+    `;
+}
+
+function restartGame() { saveStage(1); stage = 1; render(); }
+function notifyComplete() {
+    if (window.parent !== window) {
+        window.parent.postMessage({ type: COMPLETE_MESSAGE }, '*');
+        return;
+    }
+    window.location.href = './';
+}
+
+/* ═══ Mistake Book ═══ */
+function openMistakeBook() {
+    const list = $('mistakeList');
+    list.innerHTML = '';
+    if (mistakes.length === 0) {
+        list.innerHTML = '<div class="modal-empty">暂无错题，继续加油！</div>';
+    } else {
+        mistakes.forEach((m) => {
+            const div = document.createElement('div');
+            div.className = 'mistake-item';
+            div.innerHTML = `
+                <div class="q">Q: ${m.question}</div>
+                <div class="a">你的答案：${m.userAnswer} ｜ <span>正确答案：${m.correctAnswer}</span></div>
+            `;
+            list.appendChild(div);
+        });
+    }
+    $('mistakeModal').style.display = '';
+}
+function closeMistakeBook() { $('mistakeModal').style.display = 'none'; }
+function clearMistakes() { mistakes = []; saveMistakes(); updateBadge(); closeMistakeBook(); }
+
+/* Capture drag data globally so drop handler can read it */
+document.addEventListener('dragstart', (e) => {
+    const id = e.dataTransfer.getData('text/plain');
+    if (id) window._s1DragData = { id };
+});
+
+/* Init */
+load();
+render();
+</script>
+</body>
+</html>

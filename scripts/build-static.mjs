@@ -23,6 +23,7 @@ mkdirSync(dist, { recursive: true });
   'index.html',
   'mini-games-bridge.js',
   'twelve-rules.html',
+  'org-structure-game.html',
   'assets',
   'cinematic',
   'game-assets',
