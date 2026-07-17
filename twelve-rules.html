@@ -336,23 +336,29 @@ function loadStage() {
 }
 
 function saveStage(s) {
+    stage = s;
     try { localStorage.setItem(STORAGE_KEY, String(s)); } catch(e) {}
 }
 
 function loadMistakes() {
     try {
         const raw = localStorage.getItem(MISTAKES_KEY);
-        if (raw) return JSON.parse(raw);
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            return Array.isArray(parsed) ? parsed : [];
+        }
     } catch(e) {}
     return [];
 }
 
 function saveMistakes() {
+    if (!Array.isArray(mistakes)) mistakes = [];
     try { localStorage.setItem(MISTAKES_KEY, JSON.stringify(mistakes)); } catch(e) {}
     updateMistakeBadge();
 }
 
 function addMistake(type, question, userAnswer, correctAnswer, explain) {
+    if (!Array.isArray(mistakes)) mistakes = [];
     mistakes.push({ type, question, userAnswer, correctAnswer, explain, time: Date.now() });
     saveMistakes();
 }
@@ -364,8 +370,10 @@ function clearMistakes() {
 }
 
 function resetProgress() {
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem(MISTAKES_KEY);
+    try {
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(MISTAKES_KEY);
+    } catch(e) {}
     stage = 1;
     mistakes = [];
     render();
@@ -414,6 +422,8 @@ function closeMistakeBook() {
 
 function renderMistakeBook() {
     const body = $('mistakeBody');
+    if (!body) return;
+    if (!Array.isArray(mistakes)) mistakes = [];
     if (mistakes.length === 0) {
         body.innerHTML = `
             <div class="modal-empty">
@@ -437,6 +447,7 @@ function renderMistakeBook() {
 }
 
 function redoMistake(idx) {
+    if (!Array.isArray(mistakes) || !mistakes[idx]) return;
     closeMistakeBook();
     stage = mistakes[idx].type === 's1' ? 1 : 2;
     saveStage(stage);
@@ -471,6 +482,7 @@ function finishStage(nextStage, title, message, nextHint) {
 // Render
 // ═══════════════════════════════════════════
 function render() {
+    stage = loadStage();
     $('stagePill').textContent = stage === 4 ? '✅ 全部完成' : `第 ${stage} / 3 阶段`;
 
     ['step1', 'step2', 'step3'].forEach((id, i) => {
@@ -570,7 +582,7 @@ function handleS1Pick(idx, btn) {
 // Stage 2: Quiz
 // ═══════════════════════════════════════════
 function renderStage2(main) {
-    s2Items = shuffle(QUIZ).slice(0, 6);
+    s2Items = shuffle(QUIZ).slice(0, 2);
     s2Idx = 0;
     s2Score = 0;
     s2Locked = false;

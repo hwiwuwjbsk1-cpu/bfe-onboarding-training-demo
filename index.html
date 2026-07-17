@@ -79,6 +79,31 @@
   <div id="root"></div>
   <script>
     (() => {
+      const resetMarker = 'bfe-training-reset-20260717-v1';
+      const keys = [
+        'bfe-general-onboarding-knowledge-visited',
+        'bfe-phase-one-complete',
+        'web-mini-games-stats-v1',
+        'web-mini-games-progress-v1',
+        'web-mini-games-map-unlocked-v1',
+        'bfe-twelve-rules-stage-v1',
+        'bfe-twelve-rules-mistakes-v1',
+        'bfe-org-game-progress-v1',
+        'bfe-org-game-mistakes-v1'
+      ];
+
+      try {
+        if (localStorage.getItem(resetMarker) !== '1') {
+          keys.forEach((key) => localStorage.removeItem(key));
+          localStorage.setItem(resetMarker, '1');
+        }
+      } catch (error) {
+        console.warn('Training progress reset skipped.', error);
+      }
+    })();
+  </script>
+  <script>
+    (() => {
       const videoSrc = './onboarding/phase2-transition.mp4';
       const overlayLabel = '第二阶段入口';
 

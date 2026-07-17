@@ -249,15 +249,23 @@ function loadStage() {
 }
 
 function saveStage(nextStage) {
+    stage = nextStage;
     try { localStorage.setItem(STORAGE_KEY, String(nextStage)); } catch {}
 }
 
 function load() {
-    try { mistakes = JSON.parse(localStorage.getItem(MISTAKES_KEY)) || []; } catch { mistakes = []; }
+    try {
+        const parsed = JSON.parse(localStorage.getItem(MISTAKES_KEY));
+        mistakes = Array.isArray(parsed) ? parsed : [];
+    } catch { mistakes = []; }
 }
-function saveMistakes() { localStorage.setItem(MISTAKES_KEY, JSON.stringify(mistakes)); }
+function saveMistakes() {
+    if (!Array.isArray(mistakes)) mistakes = [];
+    try { localStorage.setItem(MISTAKES_KEY, JSON.stringify(mistakes)); } catch {}
+}
 
 function recordMistake(type, question, userAnswer, correctAnswer) {
+    if (!Array.isArray(mistakes)) mistakes = [];
     mistakes.unshift({ type, question, userAnswer, correctAnswer, ts: Date.now() });
     if (mistakes.length > 30) mistakes.pop();
     saveMistakes();
@@ -274,9 +282,12 @@ function shuffle(arr) {
 function $(id) { return document.getElementById(id); }
 function updateBadge() {
     const badge = $('mistakeBadge');
-    badge.textContent = mistakes.length || '';
-    badge.style.display = mistakes.length ? '' : 'none';
-    $('mistakeCount').textContent = `${mistakes.length} 道错题`;
+    if (badge) {
+        badge.textContent = mistakes.length || '';
+        badge.style.display = mistakes.length ? '' : 'none';
+    }
+    const count = $('mistakeCount');
+    if (count) count.textContent = `${mistakes.length} 道错题`;
 }
 function setStageLabel(t) { $('stageLabel').textContent = t; }
 function setStagePill(t) { $('stagePill').textContent = t; }
@@ -329,7 +340,11 @@ function renderStage1(main) {
         node.innerHTML = `<span class="child-num">${i + 1}</span><span class="child-label">待放置</span>`;
         node.addEventListener('dragover', (e) => { e.preventDefault(); node.classList.add('drag-over'); });
         node.addEventListener('dragleave', () => { node.classList.remove('drag-over'); });
-        node.addEventListener('drop', (e) => { e.preventDefault(); node.classList.remove('drag-over'); handleS1Drop(node); });
+        node.addEventListener('drop', (e) => {
+            e.preventDefault();
+            node.classList.remove('drag-over');
+            handleS1Drop(node, e.dataTransfer.getData('text/plain'));
+        });
         children.appendChild(node);
     });
 
@@ -340,8 +355,15 @@ function renderStage1(main) {
         card.textContent = d.name;
         card.dataset.id = d.id;
         card.draggable = true;
-        card.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', d.id); card.classList.add('dragging'); });
-        card.addEventListener('dragend', () => { card.classList.remove('dragging'); });
+        card.addEventListener('dragstart', (e) => {
+            window._s1DragData = { id: d.id };
+            e.dataTransfer.setData('text/plain', d.id);
+            card.classList.add('dragging');
+        });
+        card.addEventListener('dragend', () => {
+            card.classList.remove('dragging');
+            window._s1DragData = null;
+        });
         card.addEventListener('click', () => handleS1CardClick(card, d.id));
         cards.appendChild(card);
     });
@@ -371,7 +393,8 @@ function handleS1CardClick(card, id) {
         setTimeout(() => { card.classList.remove('wrong'); nextSlot.classList.remove('wrong'); }, 600);
         $('s1hint').textContent = '❌ 放错了！想想这个部门应该放在哪个位置。';
         $('s1hint').className = 's1-hint err';
-        recordMistake('department', '部门归位：' + card.textContent, '放错槽位', correctId);
+        const correctName = DEPARTMENTS.find(d => d.id === correctId)?.name || correctId;
+        recordMistake('department', '部门归位：' + card.textContent, '放错槽位', correctName);
         updateBadge();
         s1Locked = false;
         return;
@@ -391,17 +414,17 @@ function handleS1CardClick(card, id) {
     }, 400);
 }
 
-function handleS1Drop(slot) {
+function handleS1Drop(slot, droppedId) {
     if (s1Locked || slot.classList.contains('filled')) return;
-    const dt = window._s1DragData;
-    if (!dt) return;
-    const card = document.querySelector(`.dept-card[data-id="${dt.id}"]`);
+    const id = droppedId || window._s1DragData?.id;
+    if (!id) return;
+    const card = document.querySelector(`.dept-card[data-id="${id}"]`);
     if (!card || card.classList.contains('used')) return;
     s1Locked = true;
     const slotCorrectId = slot.dataset.correctId;
-    if (dt.id === slotCorrectId) {
+    if (id === slotCorrectId) {
         card.classList.add('used');
-        const deptName = DEPARTMENTS.find(d => d.id === dt.id)?.name || '';
+        const deptName = DEPARTMENTS.find(d => d.id === id)?.name || '';
         slot.classList.remove('empty');
         slot.classList.add('filled');
         slot.querySelector('.child-label').textContent = deptName;
@@ -414,7 +437,8 @@ function handleS1Drop(slot) {
         setTimeout(() => { card.classList.remove('wrong'); slot.classList.remove('wrong'); }, 600);
         $('s1hint').textContent = '❌ 放错了！想想这个部门应该放在哪个位置。';
         $('s1hint').className = 's1-hint err';
-        recordMistake('department', '部门归位：' + card.textContent, '放错槽位', slotCorrectId);
+        const correctName = DEPARTMENTS.find(d => d.id === slotCorrectId)?.name || slotCorrectId;
+        recordMistake('department', '部门归位：' + card.textContent, '放错槽位', correctName);
         updateBadge();
         s1Locked = false;
         return;
@@ -659,7 +683,8 @@ function renderComplete(main) {
 function restartGame() { saveStage(1); stage = 1; render(); }
 function notifyComplete() {
     if (window.parent !== window) {
-        window.parent.postMessage({ type: COMPLETE_MESSAGE }, '*');
+        const targetOrigin = window.location.origin === 'null' ? '*' : window.location.origin;
+        window.parent.postMessage({ type: COMPLETE_MESSAGE }, targetOrigin);
         return;
     }
     window.location.href = './';
