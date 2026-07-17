@@ -386,7 +386,7 @@ export default function App() {
             window.parent.postMessage({ type }, targetOrigin);
             return;
         }
-        window.location.href = './';
+        window.location.href = './index.html';
     }, []);
 
     const completeMiniLayer = useCallback(() => {
